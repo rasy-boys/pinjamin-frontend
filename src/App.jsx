@@ -18,8 +18,21 @@ import PetugasReturn from "./pages/PetugasReturn";
 import Home from "./pages/Home";
 import PeminjamProfil from "./pages/PeminjamProfil";  
 import AdminProfil from "./pages/AdminProfil";  
+import PeminjamPengembalian from "./pages/PeminjamPengembalian";
+import PetugasLaporan from "./pages/PetugasLaporan";
+import FineSetting from "./pages/FineSetting";
+import { useEffect } from "react";
 
 function App() {
+   useEffect(() => {
+    const theme = localStorage.getItem("theme");
+
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
   return (
     <BrowserRouter>
       <Routes>
@@ -52,6 +65,24 @@ function App() {
         </ProtectedRoute>
         }
         />
+
+        <Route
+  path="/fine-setting"
+  element={
+    <ProtectedRoute roles={["petugas"]}>
+      <FineSetting />
+    </ProtectedRoute>
+  }
+/>
+
+        <Route
+  path="/petugas-laporan"
+  element={
+    <ProtectedRoute roles={["petugas"]}>
+      <PetugasLaporan />
+    </ProtectedRoute>
+  }
+/>
 
         <Route
   path="/peminjam"
@@ -133,6 +164,15 @@ function App() {
   element={
     <ProtectedRoute roles={["peminjam"]}>
       <PeminjamStatus />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/pengembalian-peminjam"
+  element={
+    <ProtectedRoute roles={["peminjam"]}>
+      <PeminjamPengembalian />
     </ProtectedRoute>
   }
 />

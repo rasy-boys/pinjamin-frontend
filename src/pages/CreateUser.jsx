@@ -12,7 +12,7 @@ export default function CreateUser() {
   const petugas = users.filter((u) => u.role === "petugas");
 
   const [form, setForm] = useState({
-    id: null, name: "", email: "", password: "", role: "peminjam",
+    id: null, name: "", email: "", role: "peminjam",
     full_name: "", kelas: "", jurusan: "", nis: "",
   });
 
@@ -28,14 +28,14 @@ export default function CreateUser() {
   useEffect(() => { loadUsers(); }, []);
 
   const openAdd = () => {
-    setForm({ id: null, name: "", email: "", password: "", role: "peminjam", full_name: "", kelas: "", jurusan: "", nis: "" });
+    setForm({ id: null, name: "", email: "", role: "peminjam", full_name: "", kelas: "", jurusan: "", nis: "" });
     setIsEdit(false);
     setShowModal(true);
   };
 
   const openEdit = (user) => {
     setForm({
-      id: user.id, name: user.name, email: user.email, password: "", role: user.role,
+      id: user.id, name: user.name, email: user.email, role: user.role,
       full_name: user.siswa?.full_name || "", kelas: user.siswa?.kelas || "",
       jurusan: user.siswa?.jurusan || "", nis: user.siswa?.nis || "",
     });
@@ -240,23 +240,40 @@ export default function CreateUser() {
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Username</label>
                 <input placeholder="Ex: johndoe" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 outline-none transition-all" required />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Password</label>
-                <input type="password" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 outline-none transition-all" required={!isEdit} />
+              <div className="space-y-1.5 col-span-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                Password
+              </label>
+
+              <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 flex items-center gap-3">
+                <i className="fas fa-envelope-open-text text-green-600"></i>
+                Password akan dibuat otomatis dan dikirim ke email pengguna
               </div>
             </div>
 
+            </div>
+
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Email Sekolah</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Email</label>
               <input type="email" placeholder="user@sekolah.sch.id" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 outline-none transition-all" required />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">Tipe Akun (Role)</label>
-              <select value={form.role} disabled={isEdit} onChange={(e) => setForm({ ...form, role: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 outline-none cursor-pointer">
-                <option value="peminjam">Siswa (Peminjam)</option>
-                <option value="petugas">Petugas (Inventory)</option>
-              </select>
+              <select
+  value={form.role}
+  disabled={isEdit || roleLogin === "petugas"}
+  onChange={(e) => setForm({ ...form, role: e.target.value })}
+  className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-slate-900 outline-none cursor-pointer"
+>
+  <option value="peminjam">Siswa (Peminjam)</option>
+
+  {roleLogin === "admin" && (
+    <option value="petugas">Petugas (Inventory)</option>
+  )}
+
+</select>
+
             </div>
           </div>
 

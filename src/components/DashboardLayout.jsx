@@ -6,7 +6,7 @@ export default function DashboardLayout({ children, role }) {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [showProfile, setShowProfile] = useState(false); // State untuk dropdown profil
+  const [showProfile, setShowProfile] = useState(false);
 
   const isActive = (path) => location.pathname === path;
 
@@ -83,6 +83,8 @@ export default function DashboardLayout({ children, role }) {
                <>
                  <NavLink to="/manage-peminjaman" icon="fa-tasks">Kelola Pinjaman</NavLink>
                  <NavLink to="/manage-return" icon="fa-retweet">Pengembalian</NavLink>
+                 <NavLink to="/petugas-laporan" icon="fa-file-invoice">Laporan</NavLink>
+                 <NavLink to="/fine-setting" icon="fa-money-bill-wave">Setting Denda</NavLink>
                </>
              )}
           </div>
@@ -104,39 +106,50 @@ export default function DashboardLayout({ children, role }) {
             </button>
             <div className="hidden sm:block">
               <h1 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{role} System</h1>
-              <p className="text-lg font-black text-gray-800 mt-1">Portal Inventaris Lab</p>
+              <p className="text-lg font-black text-gray-800 mt-1">Portal Peminjaman</p>
             </div>
           </div>
 
-          {/* DROPDOWN PROFILE ADMIN/PETUGAS */}
+          {/* DROPDOWN PROFILE */}
           <div className="relative">
             <button 
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center gap-3 bg-gray-50 p-1.5 pr-4 rounded-full border border-gray-100 hover:bg-white hover:shadow-md transition-all"
             >
-              <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
+              {/* Avatar Bulat */}
+              <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0">
                 {localStorage.getItem("name")?.charAt(0) || "A"}
               </div>
-              <div className="hidden md:block text-left leading-none">
-                <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{localStorage.getItem("name") || "Admin"}</p>
-                <p className="text-[9px] font-bold text-green-600 uppercase mt-0.5">{role}</p>
+
+              {/* Text Container: Name di atas, Role di bawah */}
+              <div className="hidden md:flex flex-col text-left justify-center leading-none">
+                <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
+                  {localStorage.getItem("name") || "Guest"}
+                </p>
+                <p className="text-[9px] font-bold text-green-600 uppercase tracking-wide mt-1">
+                  {role}
+                </p>
               </div>
+
               <i className={`fas fa-chevron-down text-[10px] text-gray-400 transition-transform ${showProfile ? 'rotate-180' : ''}`}></i>
             </button>
 
+            {/* Dropdown Menu */}
             {showProfile && (
               <>
-                <div className="fixed inset-0 z-[-1]" onClick={() => setShowProfile(false)}></div>
-                <div className="absolute right-0 mt-4 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 z-10" onClick={() => setShowProfile(false)}></div>
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 z-20 animate-in fade-in zoom-in duration-200">
                   <Link 
                     to="/profil-admin" 
                     onClick={() => setShowProfile(false)}
                     className="w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl flex items-center gap-3 transition-all"
                   >
-                    <i className="fas fa-user-circle text-gray-400"></i>
+                    <i className="fas fa-user-circle text-gray-400 text-lg"></i>
                     <span className="text-xs font-bold uppercase tracking-widest">Profil Saya</span>
                   </Link>
+                  
                   <hr className="my-1 border-gray-50" />
+                  
                   <button 
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl flex items-center gap-3 transition-all"

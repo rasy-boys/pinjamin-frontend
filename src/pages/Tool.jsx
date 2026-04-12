@@ -101,6 +101,7 @@ export default function Tool() {
                 <th className="p-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Info Barang</th>
                 <th className="p-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Klasifikasi</th>
                 <th className="p-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Unit Tersedia</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Unit Dipinjam</th>
                 <th className="p-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Opsi</th>
               </tr>
             </thead>
@@ -143,6 +144,18 @@ export default function Tool() {
                       <div className="flex items-center gap-3">
                         <div className={`px-4 py-1.5 rounded-xl font-black text-xs flex items-center gap-2 ${t.stock > 0 ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
                            {t.stock} <span className="text-[9px] opacity-60">Unit</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`px-4 py-1.5 rounded-xl font-black text-xs flex items-center gap-2 ${
+                          t.borrowed > 0
+                            ? "bg-amber-50 text-amber-600 border border-amber-100"
+                            : "bg-slate-50 text-slate-400 border border-slate-100"
+                        }`}>
+                          {t.borrowed || 0}
+                          <span className="text-[9px] opacity-60">Unit</span>
                         </div>
                       </div>
                     </td>

@@ -3,169 +3,523 @@ import api from "../api/axios";
 import DashboardLayout from "../components/DashboardLayout";
 
 export default function PetugasReturn() {
+
   const role = localStorage.getItem("role");
-  
-  const [requests, setRequests] = useState([]); // Antrean baru
-  const [history, setHistory] = useState([]);   // Riwayat selesai
+
+  const [requests, setRequests] = useState([]);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("request"); // 'request' atau 'history'
+  const [tab, setTab] = useState("request");
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const resReq = await api.get("/loans/return-request");
-      const resHis = await api.get("/loans/history"); // Pastikan endpoint ini mengembalikan data status 'returned'
-      
-      setRequests(resReq.data);
-      // Filter history hanya yang sudah dikembalikan (returned)
-      setHistory(resHis.data.filter(item => item.status === "returned"));
-    } catch (err) {
-      console.log(err);
-      alert("Gagal memuat data");
-    } finally {
-      setLoading(false);
-    }
+  // MODAL
+  const [showModal, setShowModal] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState(null);
+const [activeLoans, setActiveLoans] = useState([]); // Tab Pengingat
+const [sending, setSending] = useState(null); // Loading per baris
+  
+/* ================= LOAD UPDATED ================= */
+const load = async () => {
+  setLoading(true);
+  try {
+    const resReq = await api.get("/loans/return-request");
+    const resHis = await api.get("/loans/history");
+    
+    setRequests(resReq.data);
+    setHistory(resHis.data.filter(item => item.status === "returned"));
+    
+    // Ambil data yang masih dipinjam (status approved) untuk tab pengingat
+    setActiveLoans(resHis.data.filter(item => item.status === "approved"));
+  } catch (err) {
+    alert("Gagal memuat data");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  useEffect(() => {
+    load();
+  }, []);
+
+
+  /* ================= SEND EMAIL REMINDER ================= */
+const sendReminder = async (id) => {
+  try {
+    setSending(id);
+    const res = await api.post(`/loans/${id}/reminder`);
+    alert(`📧 Berhasil! ${res.data.message}`);
+  } catch (err) {
+    alert(err.response?.data?.message || "Gagal mengirim email");
+  } finally {
+    setSending(null);
+  }
+};
+
+/* ================= SISA WAKTU LOGIC ================= */
+const getRemainingTime = (loan) => {
+  const now = new Date();
+  let limit;
+
+  if (loan.type === "day") {
+    limit = new Date(loan.end_date);
+    limit.setHours(23, 59, 59);
+  } else {
+    limit = new Date(`${loan.start_date} ${loan.end_time}`);
+  }
+
+  const diffMs = limit - now;
+  
+  // Jika waktu sudah lewat (terlambat)
+  if (diffMs < 0) {
+    return { text: "Waktu Habis", color: "text-red-600", urgent: true };
+  }
+
+  const diffMins = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMins / 60);
+  const mins = diffMins % 60;
+
+  // Jika di bawah 1 jam (Hanya tampilkan Menit)
+  if (hours === 0) {
+    return { 
+      text: `${mins} Menit Lagi`, 
+      color: "text-amber-600", 
+      urgent: mins <= 20 // Berkedip jika sisa 20 menit kebawah
+    };
+  }
+
+  // Jika di atas 1 jam (Tampilkan Jam & Menit)
+  return { 
+    text: `${hours}j ${mins}m Lagi`, 
+    color: "text-green-600", 
+    urgent: false 
   };
+};
 
-  useEffect(() => { load(); }, []);
-
+  /* ================= CONFIRM ================= */
   const confirmReturn = async (id) => {
-    if (!confirm("Konfirmasi pengembalian alat ini?")) return;
+
     try {
+
       const res = await api.post(`/loans/${id}/confirm-return`);
-      alert(`Berhasil! ✅\nStatus: Dikembalikan\nDenda: Rp ${res.data.fine?.toLocaleString() || 0}`);
+
+      alert(
+        `Berhasil ✅\nDenda: Rp ${res.data.fine?.toLocaleString() || 0}`
+      );
+
       load();
+
     } catch (err) {
+
       alert(err.response?.data?.message || "Gagal konfirmasi");
     }
   };
 
+
+
+  /* ================= BATAS ================= */
   const getLimit = (l) => {
+
     if (l.type === "day") return l.end_date;
-    if (l.type === "hour") return `${l.start_time} - ${l.end_time}`;
+
+    if (l.type === "hour")
+      return `${l.start_date} • ${l.start_time} - ${l.end_time}`;
+
     return "-";
   };
 
+
+
+  /* ================= TELAT INFO ================= */
+  const getLateInfo = (loan) => {
+
+    if (!loan.return_date) return "-";
+
+    const returned = new Date(loan.return_date + " GMT+0700");
+
+    let limit;
+
+    if (loan.type === "day") {
+      limit = new Date(loan.end_date);
+      limit.setHours(23, 59, 59);
+    }
+    else {
+      limit = new Date(`${loan.start_date} ${loan.end_time}`);
+    }
+
+    const diff = returned - limit;
+
+    if (diff <= 0) return "Tepat waktu";
+
+
+    if (loan.type === "day") {
+
+      const days = Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+
+      return `${days} Hari`;
+    }
+
+
+    const hours = Math.max(1, Math.ceil(diff / (1000 * 60 * 60)));
+
+    return `${hours} Jam`;
+  };
+
+
+
+  /* ================= PREVIEW DENDA ================= */
+  const getPreviewFine = (loan) => {
+
+    const now = new Date();
+
+    const hourRate = 5000;
+    const dayRate = 10000;
+
+    let limit;
+
+    if (loan.type === "day") {
+
+      limit = new Date(loan.end_date);
+      limit.setHours(23, 59, 59);
+
+    }
+    else {
+
+      limit = new Date(`${loan.start_date} ${loan.end_time}`);
+    }
+
+    const diff = now - limit;
+
+
+    if (diff <= 0) {
+
+      return {
+        late: false,
+        text: "Tepat Waktu",
+        fine: 0
+      };
+    }
+
+
+    if (loan.type === "day") {
+
+      const lateDay = Math.max(
+        1,
+        Math.ceil(diff / (1000 * 60 * 60 * 24))
+      );
+
+      return {
+        late: true,
+        text: `Terlambat ${lateDay} Hari`,
+        fine: lateDay * dayRate
+      };
+    }
+
+
+    const lateHour = Math.max(
+      1,
+      Math.ceil(diff / (1000 * 60 * 60))
+    );
+
+    return {
+      late: true,
+      text: `Terlambat ${lateHour} Jam`,
+      fine: lateHour * hourRate
+    };
+  };
+
+
+
+  /* ================= UI ================= */
   return (
     <DashboardLayout role={role}>
-      {/* HEADER SECTION */}
+
+
+      {/* HEADER */}
       <div className="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+
         <div>
           <h2 className="text-3xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+
             <span className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
               <i className="fas fa-rotate-left"></i>
             </span>
+
             Logistik Kembali
           </h2>
+
           <p className="text-gray-400 text-sm font-medium mt-1 ml-1">
             Pantau dan validasi pemulangan inventaris laboratorium.
           </p>
         </div>
 
-        {/* MODERN TAB SWITCHER */}
+
+        {/* TAB */}
         <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-1 w-fit border border-gray-200 shadow-inner">
+
+    <button onClick={() => setTab("reminder")} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${tab === "reminder" ? "bg-white text-amber-600 shadow-md" : "text-gray-500"}`}>
+        Pengingat <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-100">{activeLoans.length}</span>
+      </button>
           <button
             onClick={() => setTab("request")}
             className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-              tab === "request" ? "bg-white text-blue-600 shadow-md" : "text-gray-500 hover:text-gray-700"
+              tab === "request"
+                ? "bg-white text-blue-600 shadow-md"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            Antrean <span className={`px-2 py-0.5 rounded-full text-[10px] ${tab === 'request' ? 'bg-blue-100' : 'bg-gray-200'}`}>{requests.length}</span>
+            Antrean
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-100">
+              {requests.length}
+            </span>
           </button>
+
+
           <button
             onClick={() => setTab("history")}
             className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-              tab === "history" ? "bg-white text-blue-600 shadow-md" : "text-gray-500 hover:text-gray-700"
+              tab === "history"
+                ? "bg-white text-blue-600 shadow-md"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            Riwayat Selesai
+            Riwayat
           </button>
+
         </div>
       </div>
 
-      {/* DATA CONTAINER */}
+
+
+      {/* TABLE */}
       <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden min-h-[450px]">
+
         <div className="overflow-x-auto p-6">
-          <table className="w-full border-separate border-spacing-y-4">
-            <thead>
-              <tr className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
-                <th className="px-4 py-2 text-center w-16">No</th>
-                <th className="px-4 py-2 text-left">Siswa</th>
-                <th className="px-4 py-2 text-left">Alat & ID</th>
-                <th className="px-4 py-2 text-center">Batas</th>
-                {tab === "history" && <th className="px-4 py-2 text-center">Denda</th>}
-                <th className="px-4 py-2 text-center">Aksi / Status</th>
-              </tr>
-            </thead>
-            
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={tab === "history" ? 6 : 5} className="py-20 text-center">
-                    <i className="fas fa-spinner animate-spin text-3xl text-blue-500"></i>
-                  </td>
-                </tr>
-              ) : (tab === "request" ? requests : history).length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-20 text-center">
-                    <p className="text-gray-400 font-bold italic tracking-wide">Data tidak ditemukan.</p>
-                  </td>
-                </tr>
-              ) : (
-                (tab === "request" ? requests : history).map((l, i) => (
-                  <tr key={l.id} className="group transition-all">
-                    <td className="bg-gray-50/50 px-4 py-5 text-center rounded-l-2xl font-black text-gray-400 group-hover:bg-blue-50/50 border-y border-l border-transparent group-hover:border-blue-100">
-                      {i + 1}
-                    </td>
-                    
-                    <td className="bg-gray-50/50 px-4 py-5 group-hover:bg-blue-50/50 border-y border-transparent group-hover:border-blue-100 font-bold text-gray-700 text-sm">
-                      {l.user?.name}
-                    </td>
 
-                    <td className="bg-gray-50/50 px-4 py-5 group-hover:bg-blue-50/50 border-y border-transparent group-hover:border-blue-100">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">{l.tool?.name}</span>
-                        <span className="text-[9px] text-gray-400 font-bold italic tracking-widest italic">QUANTITY: {l.qty} UNIT</span>
-                      </div>
-                    </td>
+         <table className="w-full border-separate border-spacing-y-4">
+  {/* HEAD */}
+  <thead>
+    <tr className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
+      <th className="px-4 py-2 text-center w-16">No</th>
+      <th className="px-4 py-2 text-left">Siswa</th>
+      <th className="px-4 py-2 text-left">Alat</th>
+      
+      {/* Judul Kolom Dinamis */}
+      {tab === "reminder" ? (
+        <th className="px-4 py-2 text-center">Sisa Waktu</th>
+      ) : (
+        <>
+          <th className="px-4 py-2 text-left">Pinjam</th>
+          <th className="px-4 py-2 text-center">Batas</th>
+        </>
+      )}
 
-                    <td className="bg-gray-50/50 px-4 py-5 text-center group-hover:bg-blue-50/50 border-y border-transparent group-hover:border-blue-100">
-                      <span className="text-xs font-bold text-gray-500 bg-white px-3 py-1.5 rounded-xl border border-gray-100 shadow-sm">
-                        {getLimit(l)}
-                      </span>
-                    </td>
+      {tab === "history" && (
+        <th className="px-4 py-2 text-center">Denda</th>
+      )}
 
-                    {tab === "history" && (
-                      <td className="bg-gray-50/50 px-4 py-5 text-center group-hover:bg-blue-50/50 border-y border-transparent group-hover:border-blue-100">
-                        <span className={`text-xs font-black ${l.fine > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                          Rp {l.fine?.toLocaleString() || 0}
-                        </span>
-                      </td>
-                    )}
+      <th className="px-4 py-2 text-center">Aksi</th>
+    </tr>
+  </thead>
 
-                    <td className="bg-gray-50/50 px-4 py-5 text-center rounded-r-2xl border-y border-r border-transparent group-hover:border-blue-100 group-hover:bg-blue-50/30">
-                      {tab === "request" ? (
-                        <button
-                          onClick={() => confirmReturn(l.id)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95 flex items-center gap-2 mx-auto"
-                        >
-                          <i className="fas fa-check-double"></i>
-                          VALIDASI
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-center gap-2 text-green-500 font-black text-[10px] uppercase tracking-widest bg-green-50 py-2 rounded-xl border border-green-100">
-                          <i className="fas fa-circle-check"></i>
-                          Selesai
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
+  {/* BODY */}
+  <tbody>
+    {loading ? (
+      <tr>
+        <td colSpan={7} className="py-20 text-center">
+          <i className="fas fa-spinner animate-spin text-3xl text-blue-500"></i>
+        </td>
+      </tr>
+    ) : (tab === "request" ? requests : tab === "reminder" ? activeLoans : history).length === 0 ? (
+      <tr>
+        <td colSpan={7} className="py-20 text-center text-gray-400 font-bold italic">
+          Data tidak ditemukan.
+        </td>
+      </tr>
+    ) : (
+      (tab === "request" ? requests : tab === "reminder" ? activeLoans : history).map((l, i) => {
+        
+        // Ambil info denda untuk history atau info waktu untuk reminder
+        const info = tab === "history" ? getPreviewFine(l) : null;
+        const timeInfo = tab === "reminder" ? getRemainingTime(l) : null;
+
+        return (
+          <tr key={l.id} className="group">
+            <td className="bg-gray-50/50 px-4 py-5 text-center rounded-l-2xl font-black text-gray-400">
+              {i + 1}
+            </td>
+
+            <td className="bg-gray-50/50 px-4 py-5 font-bold text-gray-700">
+              {l.user?.name}
+              {tab === "reminder" && (
+                <div className="text-[10px] text-gray-400 font-medium">{l.user?.email}</div>
               )}
-            </tbody>
-          </table>
+            </td>
+
+            <td className="bg-gray-50/50 px-4 py-5 font-black text-gray-800">
+              {l.tool?.name}
+            </td>
+
+            {/* Kolom Waktu Dinamis */}
+            {tab === "reminder" ? (
+              <td className="bg-gray-50/50 px-4 py-5 text-center">
+                <span className={`text-xs font-black uppercase ${timeInfo.color} ${timeInfo.urgent ? 'animate-pulse' : ''}`}>
+                  {timeInfo.text}
+                </span>
+              </td>
+            ) : (
+              <>
+                <td className="bg-gray-50/50 px-4 py-5">
+                  <span className="text-xs font-bold text-gray-500 bg-white px-3 py-1.5 rounded-xl border">
+                    {l.start_date}
+                  </span>
+                </td>
+                <td className="bg-gray-50/50 px-4 py-5 text-center">
+                  <span className="text-xs font-bold text-gray-500 bg-white px-3 py-1.5 rounded-xl border">
+                    {getLimit(l)}
+                  </span>
+                </td>
+              </>
+            )}
+
+            {/* Kolom Denda (Hanya Riwayat) */}
+            {tab === "history" && (
+              <td className="bg-gray-50/50 px-4 py-5 text-center">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[10px] text-gray-400 font-bold">
+                    {getLateInfo(l)}
+                  </span>
+                  <span className={`text-xs font-black ${l.fine > 0 ? "text-red-500" : "text-green-500"}`}>
+                    Rp {l.fine?.toLocaleString() || 0}
+                  </span>
+                </div>
+              </td>
+            )}
+
+            {/* Kolom Aksi Dinamis */}
+            <td className="bg-gray-50/50 px-4 py-5 text-center rounded-r-2xl">
+              {tab === "request" && (
+                <button
+                  onClick={() => { setSelectedLoan(l); setShowModal(true); }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest shadow"
+                >
+                  VALIDASI
+                </button>
+              )}
+
+              {tab === "reminder" && (
+                <button
+                  onClick={() => sendReminder(l.id)}
+                  disabled={sending === l.id}
+                  className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest shadow transition-all flex items-center justify-center gap-2 mx-auto
+                    ${sending === l.id 
+                      ? 'bg-gray-300 text-gray-500' 
+                      : timeInfo.urgent 
+                        ? 'bg-red-500 text-white animate-pulse' // Berkedip kalau urgent
+                        : 'bg-amber-500 text-white hover:bg-amber-600'
+                    }
+                  `}
+                >
+                  {sending === l.id ? (
+                    <i className="fas fa-spinner animate-spin"></i>
+                  ) : (
+                    <i className="fas fa-paper-plane"></i>
+                  )}
+                  {sending === l.id ? 'MENGIRIM...' : 'KIRIM EMAIL'}
+                </button>
+              )}
+
+              {tab === "history" && (
+                <div className="text-green-600 font-black text-[10px] uppercase">
+                  SELESAI
+                </div>
+              )}
+            </td>
+          </tr>
+        );
+      })
+    )}
+  </tbody>
+</table>
+
         </div>
       </div>
+
+
+
+      {/* ================= MODAL ================= */}
+      {showModal && selectedLoan && (() => {
+
+        const info = getPreviewFine(selectedLoan);
+
+        return (
+
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+            <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-xl">
+
+
+              <h3 className="text-xl font-black mb-4">
+                Konfirmasi Pengembalian
+              </h3>
+
+
+              <div className="space-y-2 text-sm mb-6">
+
+                <p><b>Siswa:</b> {selectedLoan.user?.name}</p>
+                <p><b>Alat:</b> {selectedLoan.tool?.name}</p>
+                <p><b>Jumlah:</b> {selectedLoan.qty}</p>
+                <p><b>Batas:</b> {getLimit(selectedLoan)}</p>
+
+                <p className={`font-black ${
+                  info.late
+                    ? "text-red-500"
+                    : "text-green-600"
+                }`}>
+                  Status: {info.text}
+                </p>
+
+                <p className="font-black">
+                  Denda: Rp {info.fine.toLocaleString()}
+                </p>
+
+              </div>
+
+
+
+              <div className="flex justify-end gap-3">
+
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setSelectedLoan(null);
+                  }}
+                  className="px-4 py-2 bg-gray-100 rounded-xl font-bold"
+                >
+                  Batal
+                </button>
+
+
+                <button
+                  onClick={async () => {
+
+                    await confirmReturn(selectedLoan.id);
+
+                    setShowModal(false);
+                    setSelectedLoan(null);
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl font-black"
+                >
+                  Konfirmasi
+                </button>
+
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+
     </DashboardLayout>
   );
 }

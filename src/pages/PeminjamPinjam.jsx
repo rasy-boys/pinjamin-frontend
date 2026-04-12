@@ -19,6 +19,8 @@ export default function PeminjamPinjam() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
+  const OPEN_TIME = "07:00";
+const CLOSE_TIME = "15:00";
   const loadTool = async () => {
     try {
       const res = await api.get(`/tools/${id}`);
@@ -35,9 +37,94 @@ export default function PeminjamPinjam() {
     loadTool();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+const isTimeValid = (selectedTime) => {
+  const now = new Date();
+
+  const [hours, minutes] = selectedTime.split(":");
+  const selected = new Date();
+  selected.setHours(parseInt(hours), parseInt(minutes), 0);
+
+  // Cek jam operasional
+  const open = new Date();
+  open.setHours(7, 0, 0);
+
+  const close = new Date();
+  close.setHours(15, 0, 0);
+
+  if (selected < open || selected > close) {
+    alert(`Perpustakaan hanya melayani peminjaman jam ${OPEN_TIME} sampai ${CLOSE_TIME}`);
+    return false;
+  }
+
+  // Cek waktu sudah lewat
+  if (selected < now) {
+    alert("Waktu sudah terlewat!");
+    return false;
+  }
+
+  return true;
+};
+
+// Letakkan di dalam komponen, sebelum return
+const isOperational = () => {
+  const now = new Date();
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  
+  // Tab Per Jam dikunci jika jam > 15:10 ATAU jam < 07:00
+  return currentTime >= "07:00" && currentTime <= "15:10";
+};
+
+const operational = isOperational();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+if (type === "hour") {
+  if (!startTime || !endTime) {
+    alert("Lengkapi jam mulai dan jam selesai!");
+    return;
+  }
+
+  const start = new Date();
+  const end = new Date();
+
+  const [startH, startM] = startTime.split(":");
+  const [endH, endM] = endTime.split(":");
+
+  start.setHours(parseInt(startH), parseInt(startM), 0);
+  end.setHours(parseInt(endH), parseInt(endM), 0);
+
+  const durationMs = end - start;
+  const durationHours = durationMs / (1000 * 60 * 60);
+
+  if (durationHours <= 0) {
+    alert("Jam selesai harus setelah jam mulai!");
+    return;
+  }
+
+  if (durationHours > 8) {
+    alert("Maksimal peminjaman per jam adalah 8 jam.");
+    return;
+  }
+}
+
+
+  // Proteksi untuk Tipe Hari (Mencegah tanggal kemarin)
+// Proteksi untuk Tipe Hari (Wajib H+1)
+if (type === "day") {
+  const selectedDate = new Date(endDate);
+  selectedDate.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  if (selectedDate < tomorrow) {
+    alert("Untuk peminjaman harian, tanggal pengembalian minimal adalah besok!");
+    return;
+  }
+}
+
+  setIsSubmitting(true);
 
     try {
       await api.post("/loans", {
@@ -59,6 +146,8 @@ export default function PeminjamPinjam() {
       setIsSubmitting(false);
     }
   };
+
+
 
   if (loading) {
     return (
@@ -152,7 +241,9 @@ export default function PeminjamPinjam() {
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
                     Durasi Peminjaman
                   </label>
-                  <div className="grid grid-cols-2 gap-3 p-1.5 bg-gray-50 rounded-[1.5rem]">
+                  <div className="grid grid-cols-2 gap-3 p-1.5 bg-gray-50 rounded-[1.5rem] relative">
+                    
+                    {/* TOMBOL HARIAN */}
                     <button
                       type="button"
                       onClick={() => setType("day")}
@@ -162,16 +253,30 @@ export default function PeminjamPinjam() {
                     >
                       Harian
                     </button>
+
+                    {/* TOMBOL PER JAM (Bisa Terkunci) */}
                     <button
                       type="button"
+                      disabled={!operational}
                       onClick={() => setType("hour")}
-                      className={`py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
-                        type === "hour" ? "bg-white text-green-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                      className={`py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all relative ${
+                        !operational 
+                          ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-300" 
+                          : type === "hour" 
+                            ? "bg-white text-green-600 shadow-sm" 
+                            : "text-gray-400 hover:text-gray-600"
                       }`}
                     >
-                      Per Jam
+                      {operational ? "Per Jam" : "🕒 Closed"}
                     </button>
                   </div>
+                  
+                  {/* Pesan info jika tutup */}
+                  {!operational && (
+                    <p className="text-[9px] text-rose-500 font-bold mt-2 ml-1 animate-pulse">
+                      * Peminjaman Per Jam hanya tersedia pukul 07:00 - 15:10 WIB.
+                    </p>
+                  )}
                 </div>
 
                 {/* ALASAN */}
@@ -191,44 +296,126 @@ export default function PeminjamPinjam() {
 
                 {/* CONDITIONAL INPUTS */}
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                  {type === "day" ? (
-                    <div>
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
-                        Tanggal Pengembalian
-                      </label>
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold outline-none"
-                        required
-                      />
-                    </div>
-                  ) : (
+            {type === "day" ? (
+  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+    {/* TANGGAL PINJAM (READ-ONLY) */}
+    <div>
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
+        Tanggal Peminjaman (Hari Ini)
+      </label>
+      <input
+        type="date"
+        value={new Date().toLocaleDateString('en-CA')}
+        readOnly
+        className="w-full bg-gray-100 border-none rounded-2xl px-6 py-4 text-gray-500 font-bold outline-none cursor-not-allowed"
+      />
+    </div>
+
+    {/* TANGGAL PENGEMBALIAN */}
+    <div>
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-800 mb-2 block ml-1">
+        Tanggal Pengembalian
+      </label>
+      <input
+        type="date"
+        // Minimal H+1 dari hari ini
+        min={(() => {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return tomorrow.toLocaleDateString('en-CA');
+        })()}
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+        className="w-full bg-gray-50 border-2 border-green-100 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold outline-none focus:border-green-500 transition-all"
+        required
+      />
+      <p className="text-[9px] text-amber-600 font-bold mt-2 ml-1 flex items-center gap-1">
+        <i className="fas fa-info-circle"></i>
+        Peminjaman harian minimal dikembalikan esok hari.
+      </p>
+    </div>
+  </div>
+) : (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
                           Jam Mulai
                         </label>
                         <input
-                          type="time"
-                          value={startTime}
-                          onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold outline-none"
-                          required
-                        />
+                        type="time"
+                        min={OPEN_TIME}
+                        max={CLOSE_TIME}
+                        value={startTime}
+                        onChange={(e) => {
+  const val = e.target.value;
+  if (!val) return;
+
+  const now = new Date();
+  const selected = new Date();
+
+  const [hours, minutes] = val.split(":");
+  selected.setHours(parseInt(hours), parseInt(minutes), 0);
+
+  const open = new Date();
+  open.setHours(7, 0, 0);
+
+  const close = new Date();
+  close.setHours(15, 0, 0);
+
+  if (selected < open || selected > close) {
+    alert(`Peminjaman hanya tersedia pukul ${OPEN_TIME} - ${CLOSE_TIME}`);
+    setStartTime("");
+    return;
+  }
+
+  if (selected < now) {
+    alert("Jam mulai tidak boleh waktu yang sudah lewat!");
+    setStartTime("");
+    return;
+  }
+
+  setStartTime(val);
+
+  // Reset jam selesai kalau user ganti jam mulai
+  setEndTime("");
+}}
+
+                        className="..."
+                        required
+                      />
                       </div>
                       <div>
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
                           Jam Selesai
                         </label>
-                        <input
-                          type="time"
-                          value={endTime}
-                          onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold outline-none"
-                          required
-                        />
+               <input
+  type="time"
+  min={startTime || OPEN_TIME}
+  max={CLOSE_TIME}
+  value={endTime}
+  onChange={(e) => {
+    const val = e.target.value;
+
+    if (!startTime) {
+      alert("Isi jam mulai dulu!");
+      return;
+    }
+
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${val}`);
+
+    if (end <= start) {
+      alert("Jam selesai harus setelah jam mulai!");
+      setEndTime("");
+      return;
+    }
+
+    setEndTime(val);
+  }}
+  className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold outline-none"
+  required
+/>
+
                       </div>
                     </div>
                   )}

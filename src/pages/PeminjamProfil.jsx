@@ -1,162 +1,204 @@
 import { useState, useEffect } from "react";
+import api from "../api/axios";
 import PeminjamLayout from "../components/PeminjamLayout";
 
 export default function PeminjamProfil() {
-  // Mengambil data dari localStorage (sesuaikan dengan key di aplikasi kamu)
   const [user, setUser] = useState({
-    name: localStorage.getItem("name") || "Nama Siswa",
-    email: localStorage.getItem("email") || "siswa@sekolah.sch.id",
-    nis: localStorage.getItem("nis") || "12345678",
-    class: localStorage.getItem("class") || "XII Rekayasa Perangkat Lunak 1",
-    avatar: null,
+    name: "",
+    email: "",
+    nis: "",
+    class: "",
   });
 
+
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+const [newPassword, setNewPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
+const [pwError, setPwError] = useState("");
+const [pwSuccess, setPwSuccess] = useState("");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get("/profile");
+
+        setUser({
+          name: res.data.siswa?.full_name || res.data.name || "",
+          email: res.data.email || "",
+          nis: res.data.siswa?.nis || "-",
+          class: `${res.data.siswa?.kelas ?? ""} ${res.data.siswa?.jurusan ?? ""}`.trim(),
+        });
+      } catch (err) {
+        console.error("Gagal load profile", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleChangePassword = async (e) => {
+  e.preventDefault();
+  setPwError("");
+  setPwSuccess("");
+
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    return setPwError("Semua field wajib diisi.");
+  }
+
+  if (newPassword !== confirmPassword) {
+    return setPwError("Konfirmasi password tidak cocok.");
+  }
+
+  try {
+    const res = await api.post("/profile/change-password", {
+  current_password: oldPassword,
+  new_password: newPassword,
+  new_password_confirmation: confirmPassword,
+});
+
+    setPwSuccess(res.data.message || "Password berhasil diubah");
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  } catch (err) {
+    setPwError(err.response?.data?.message || "Gagal ubah password");
+  }
+};
+
+  if (loading) {
+    return (
+      <PeminjamLayout>
+        <div className="flex justify-center items-center h-[70vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-500 font-semibold">Memuat profil...</p>
+          </div>
+        </div>
+      </PeminjamLayout>
+    );
+  }
 
   return (
     <PeminjamLayout>
-      <div className="max-w-5xl mx-auto">
-        {/* HEADER PROFIL */}
-        <div className="relative mb-8">
-          <div className="h-48 md:h-64 bg-gradient-to-r from-slate-900 via-slate-800 to-green-900 rounded-[3rem] shadow-2xl overflow-hidden">
-            {/* Dekorasi Abstract */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-          </div>
-          
-          <div className="px-8 md:px-12 -mt-20 flex flex-col md:flex-row items-end gap-6 relative z-10">
-            <div className="relative group">
-              <div className="w-32 h-32 md:w-40 md:h-40 bg-white p-2 rounded-[2.5rem] shadow-xl">
-                <div className="w-full h-full bg-green-100 rounded-[2rem] flex items-center justify-center text-green-600 text-4xl font-black border-4 border-green-50">
-                  {user.name.charAt(0)}
-                </div>
-              </div>
-              <button className="absolute bottom-2 right-2 w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center border-4 border-white hover:bg-green-600 transition-all">
-                <i className="fas fa-camera text-xs"></i>
-              </button>
-            </div>
-            
-            <div className="flex-1 pb-4">
-              <h2 className="text-3xl font-black text-slate-800 tracking-tight">{user.name}</h2>
-              <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">
-                NIS: {user.nis} • {user.class}
-              </p>
-            </div>
+      <div className="max-w-6xl mx-auto px-6 pb-16">
+        {/* HEADER */}
+        <div className="relative mb-16">
+          <div className="h-56 bg-gradient-to-r from-slate-900 via-slate-800 to-green-900 rounded-[3rem] shadow-xl" />
 
-            <div className="pb-4 hidden md:block">
-              <button 
+          <div className="absolute left-1/2 -bottom-16 -translate-x-1/2 w-full px-6">
+            <div className="bg-white rounded-[2.5rem] shadow-xl p-8 flex flex-col md:flex-row items-center gap-6">
+              {/* Avatar */}
+              <div className="w-28 h-28 rounded-[2rem] bg-green-600 text-white flex items-center justify-center text-4xl font-black shadow-lg">
+                {user.name.charAt(0) || "?"}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-2xl md:text-3xl font-black text-slate-800">
+                  {user.name || "-"}
+                </h2>
+                <p className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-400">
+                  NIS {user.nis} • {user.class || "-"}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">{user.email}</p>
+              </div>
+
+              {/* Action */}
+              <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm hover:shadow-md transition-all active:scale-95"
+                className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all active:scale-95"
               >
-                {isEditing ? "Simpan Perubahan" : "Edit Profil"}
+                {isEditing ? "Simpan" : "Edit Profil"}
               </button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* SISI KIRI: INFO DETAIL */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
-              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-3">
-                <i className="fas fa-user-gear text-green-600"></i>
-                Informasi Akun
-              </h4>
-              
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Nama Lengkap</label>
-                    <input 
-                      type="text" 
-                      defaultValue={user.name} 
-                      disabled={!isEditing}
-                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold text-slate-700 outline-none disabled:opacity-60 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Email</label>
-                    <input 
-                      type="email" 
-                      defaultValue={user.email} 
-                      disabled={!isEditing}
-                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold text-slate-700 outline-none disabled:opacity-60 transition-all"
-                    />
-                  </div>
-                </div>
+        {/* CONTENT */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-24">
+          {/* DETAIL */}
+          <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+            <h4 className="text-sm font-black uppercase tracking-widest text-slate-700 mb-8 flex items-center gap-3">
+              <i className="fas fa-user-gear text-green-600"></i>
+              Informasi Akun
+            </h4>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Kelas</label>
-                    <input 
-                      type="text" 
-                      defaultValue={user.class} 
-                      disabled={!isEditing}
-                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold text-slate-700 outline-none disabled:opacity-60 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Role</label>
-                    <div className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-black text-xs text-green-600 uppercase tracking-widest">
-                      Peminjam (Siswa)
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* KEAMANAN */}
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
-              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6">Keamanan Akun</h4>
-              <button className="w-full md:w-auto px-8 py-4 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-3">
-                <i className="fas fa-lock text-slate-400"></i>
-                Ganti Kata Sandi
-              </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Field label="Nama Lengkap" value={user.name} />
+              <Field label="Email" value={user.email} />
+              <Field label="NIS" value={user.nis} />
+              <Field label="Kelas / Jurusan" value={user.class} />
             </div>
           </div>
 
-          {/* SISI KANAN: STATISTIK & AKTIVITAS */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
-              <div className="relative z-10">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-green-400 mb-6">Ringkasan Aktivitas</h4>
-                
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Pinjam</span>
-                    <span className="text-2xl font-black">24</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Tepat Waktu</span>
-                    <span className="text-2xl font-black text-green-400">22</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Terlambat</span>
-                    <span className="text-2xl font-black text-red-400">2</span>
-                  </div>
-                </div>
-              </div>
-              {/* Dekorasi */}
-              <i className="fas fa-chart-line absolute bottom-[-10px] right-5 text-8xl text-white/5 rotate-12"></i>
-            </div>
+          {/* STATUS */}
+          {/* UBAH PASSWORD */}
+<div className="bg-green-50 rounded-[2.5rem] p-8 border border-green-100">
+  <h4 className="text-xs font-black uppercase tracking-widest text-green-700 mb-6">
+    Ubah Password
+  </h4>
 
-            <div className="bg-green-50 rounded-[2.5rem] p-8 border border-green-100">
-              <h4 className="text-xs font-black text-green-800 uppercase tracking-widest mb-4">Status Skor</h4>
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-green-600 shadow-sm">
-                  <i className="fas fa-shield-heart text-2xl"></i>
-                </div>
-                <div>
-                  <p className="text-lg font-black text-slate-800 tracking-tight">Peminjam Teladan</p>
-                  <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Skor: 98/100</p>
-                </div>
-              </div>
-              <p className="mt-4 text-[10px] text-green-700/70 leading-relaxed font-medium">
-                Pertahankan skormu dengan mengembalikan alat tepat waktu untuk mendapatkan prioritas peminjaman.
-              </p>
-            </div>
-          </div>
+  <form onSubmit={handleChangePassword} className="space-y-4">
+    <input
+      type="password"
+      placeholder="Password Lama"
+      value={oldPassword}
+      onChange={(e) => setOldPassword(e.target.value)}
+      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-green-400 outline-none"
+    />
+
+    <input
+      type="password"
+      placeholder="Password Baru"
+      value={newPassword}
+      onChange={(e) => setNewPassword(e.target.value)}
+      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-green-400 outline-none"
+    />
+
+    <input
+      type="password"
+      placeholder="Konfirmasi Password Baru"
+      value={confirmPassword}
+      onChange={(e) => setConfirmPassword(e.target.value)}
+      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-green-400 outline-none"
+    />
+
+    {pwError && (
+      <p className="text-xs text-red-500 font-medium">{pwError}</p>
+    )}
+
+    {pwSuccess && (
+      <p className="text-xs text-green-600 font-medium">{pwSuccess}</p>
+    )}
+
+    <button
+      type="submit"
+      className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition"
+    >
+      Simpan Password
+    </button>
+  </form>
+</div>
         </div>
       </div>
     </PeminjamLayout>
+  );
+}
+
+/* ---------- COMPONENT KECIL ---------- */
+function Field({ label, value }) {
+  return (
+    <div>
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+        {label}
+      </p>
+      <div className="bg-slate-50 rounded-xl px-5 py-4 font-bold text-slate-700">
+        {value || "-"}
+      </div>
+    </div>
   );
 }

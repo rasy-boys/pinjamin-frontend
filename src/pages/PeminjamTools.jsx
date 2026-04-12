@@ -8,6 +8,9 @@ export default function PeminjamTools() {
   const [tools, setTools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+const [showFineModal, setShowFineModal] = useState(false);
+const [fines, setFines] = useState([]);
+const [loadingFine, setLoadingFine] = useState(false);
 
   const loadTools = async () => {
     try {
@@ -29,6 +32,24 @@ export default function PeminjamTools() {
     t.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const fetchFines = async () => {
+  try {
+    setLoadingFine(true);
+    const res = await api.get("/fines");
+    setFines(res.data);
+  } catch {
+    alert("Gagal memuat informasi denda");
+  } finally {
+    setLoadingFine(false);
+  }
+};
+
+useEffect(() => {
+  if (showFineModal) {
+    fetchFines();
+  }
+}, [showFineModal]);
+
   return (
     <PeminjamLayout>
       {/* SEARCH & FILTER SECTION */}
@@ -42,15 +63,19 @@ export default function PeminjamTools() {
             placeholder="Cari alat praktikum..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-green-500 outline-none transition-all text-sm font-medium"
+            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-4xl shadow-sm focus:ring-2 focus:ring-green-500 outline-none transition-all text-sm font-medium"
           />
         </div>
         
         <div className="flex gap-2">
-          <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-gray-50 transition-all shadow-sm">
-            <i className="fas fa-sliders mr-2"></i> Filter
-          </button>
-        </div>
+  <button
+    onClick={() => setShowFineModal(true)}
+    className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-gray-50 transition-all shadow-sm"
+  >
+    <i className="fas fa-info-circle mr-2"></i> Informasi Denda
+  </button>
+</div>
+
       </div>
 
       {/* LOADING STATE */}
@@ -151,6 +176,57 @@ export default function PeminjamTools() {
           </p>
         </div>
       </div>
+      {/* MODAL INFORMASI DENDA */}
+{showFineModal && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white w-96 rounded-4xl p-8 shadow-2xl relative animate-fadeIn">
+
+      <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+        <i className="fas fa-receipt text-green-500"></i>
+        Informasi Denda
+      </h2>
+
+      {loadingFine ? (
+        <div className="text-center py-6">
+          <i className="fas fa-circle-notch animate-spin text-3xl text-green-500 mb-3"></i>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            Memuat Data...
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {fines.map((fine) => (
+            <div
+              key={fine.id}
+              className="bg-slate-50 border border-gray-100 rounded-2xl p-4 flex justify-between items-center"
+            >
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500">
+                  Denda per {fine.type}
+                </p>
+                <p className="text-lg font-black text-red-500">
+                  Rp {Number(fine.rate).toLocaleString()}
+                </p>
+              </div>
+
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                <i className="fas fa-exclamation text-red-500"></i>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={() => setShowFineModal(false)}
+        className="mt-6 w-full py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-500 transition-all"
+      >
+        Tutup
+      </button>
+    </div>
+  </div>
+)}
+
     </PeminjamLayout>
   );
 }

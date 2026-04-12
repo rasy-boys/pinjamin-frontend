@@ -19,7 +19,9 @@ export default function PeminjamLayout({ children }) {
     { name: "Beranda", path: "/peminjam", icon: "fa-house" },
     { name: "Katalog", path: "/katalog", icon: "fa-magnifying-glass" },
     { name: "Pinjaman", path: "/status-pinjaman", icon: "fa-receipt" },
+     {name: "Pengembalian", path: "/pengembalian-peminjam", icon: "fa-box-archive" },
     { name: "Profil", path: "/profil-peminjam", icon: "fa-user" }, // Tambahan menu profil
+   
   ];
 
   return (
@@ -108,13 +110,16 @@ export default function PeminjamLayout({ children }) {
               {isActive("/peminjam") && "Halo, Mau Pinjam Apa?"}
               {isActive("/katalog") && "Katalog Alat"}
               {isActive("/status-pinjaman") && "Pinjaman Kamu"}
+              {isActive("/pengembalian-peminjam") && "Pengembalian Alat"}
               {isActive("/profil-peminjam") && "Profil Akun"}
+              
               {location.pathname.includes("/pinjam/") && "Konfirmasi Pinjaman"}
             </h2>
             <p className="text-slate-400 text-sm font-medium mt-1">
               {isActive("/peminjam") && "Temukan kebutuhan praktekmu di sini."}
               {isActive("/katalog") && "Pilih alat yang tersedia untuk dipesan."}
               {isActive("/status-pinjaman") && "Pantau batas waktu dan status pengembalian."}
+              {isActive("/pengembalian-peminjam") && "Ajukan dan pantau proses pengembalian alat kamu."}
               {isActive("/profil-peminjam") && "Kelola informasi data dirimu."}
               {location.pathname.includes("/pinjam/") && "Lengkapi formulir untuk mengajukan alat."}
             </p>
