@@ -19,6 +19,31 @@ export default function PeminjamPinjam() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
+  const getNowTime = () => {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+};
+
+const addHours = (time, hoursToAdd) => {
+  const date = new Date(`2000-01-01T${time}`);
+  date.setHours(date.getHours() + hoursToAdd);
+
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+
+  return `${hh}:${mm}`;
+};
+useEffect(() => {
+  if (type === "hour") {
+    const nowTime = getNowTime();
+
+    setStartTime(nowTime);
+    setEndTime(addHours(nowTime, 1)); // default 1 jam
+  }
+}, [type]);
+
   const OPEN_TIME = "07:00";
 const CLOSE_TIME = "15:00";
   const loadTool = async () => {
@@ -167,7 +192,7 @@ if (type === "day") {
           {/* SISI KIRI: RINGKASAN ALAT */}
           <div className="lg:col-span-5">
             <div className="sticky top-28 space-y-6">
-              <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+              <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 p-8 shadow-sm dark:shadow-slate-900/50">
                 <div className="relative h-64 w-full rounded-[2rem] overflow-hidden mb-6 bg-gray-50">
                   {tool.image ? (
                     <img
@@ -209,7 +234,7 @@ if (type === "day") {
 
           {/* SISI KANAN: FORM PEMINJAMAN */}
           <div className="lg:col-span-7">
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 md:p-10 shadow-xl shadow-gray-200/20">
+            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 p-8 md:p-10 shadow-xl shadow-gray-200/20 dark:shadow-slate-900/50">
               <h4 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-3">
                 <i className="fas fa-file-signature text-green-600"></i>
                 Detail Peminjaman
@@ -341,82 +366,47 @@ if (type === "day") {
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
                           Jam Mulai
                         </label>
-                        <input
-                        type="time"
-                        min={OPEN_TIME}
-                        max={CLOSE_TIME}
-                        value={startTime}
-                        onChange={(e) => {
-  const val = e.target.value;
-  if (!val) return;
-
-  const now = new Date();
-  const selected = new Date();
-
-  const [hours, minutes] = val.split(":");
-  selected.setHours(parseInt(hours), parseInt(minutes), 0);
-
-  const open = new Date();
-  open.setHours(7, 0, 0);
-
-  const close = new Date();
-  close.setHours(15, 0, 0);
-
-  if (selected < open || selected > close) {
-    alert(`Peminjaman hanya tersedia pukul ${OPEN_TIME} - ${CLOSE_TIME}`);
-    setStartTime("");
-    return;
-  }
-
-  if (selected < now) {
-    alert("Jam mulai tidak boleh waktu yang sudah lewat!");
-    setStartTime("");
-    return;
-  }
-
-  setStartTime(val);
-
-  // Reset jam selesai kalau user ganti jam mulai
-  setEndTime("");
-}}
-
-                        className="..."
-                        required
-                      />
+                      <input
+  type="text"
+  value={startTime}
+  readOnly
+  className="w-full bg-gray-100 rounded-2xl px-6 py-4 font-bold"
+/>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
-                          Jam Selesai
-                        </label>
-               <input
-  type="time"
-  min={startTime || OPEN_TIME}
-  max={CLOSE_TIME}
-  value={endTime}
-  onChange={(e) => {
-    const val = e.target.value;
+  <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">
+    Durasi Peminjaman
+  </label>
 
-    if (!startTime) {
-      alert("Isi jam mulai dulu!");
-      return;
-    }
+  <select
+    onChange={(e) => {
+      const hours = parseInt(e.target.value);
 
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${val}`);
+      if (!startTime) {
+        alert("Jam mulai belum ada");
+        return;
+      }
 
-    if (end <= start) {
-      alert("Jam selesai harus setelah jam mulai!");
-      setEndTime("");
-      return;
-    }
+      const start = new Date(`2000-01-01T${startTime}`);
+      start.setHours(start.getHours() + hours);
 
-    setEndTime(val);
-  }}
-  className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500 font-bold outline-none"
-  required
-/>
+      const hh = String(start.getHours()).padStart(2, "0");
+      const mm = String(start.getMinutes()).padStart(2, "0");
 
-                      </div>
+      setEndTime(`${hh}:${mm}`);
+    }}
+    className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-bold outline-none focus:ring-2 focus:ring-green-500"
+  >
+    <option value="1">1 Jam</option>
+    <option value="2">2 Jam</option>
+    <option value="3">3 Jam</option>
+    <option value="4">4 Jam</option>
+    <option value="5">5 Jam</option>
+    <option value="6">6 Jam</option>
+    <option value="7">7 Jam</option>
+    <option value="8">8 Jam</option>
+  </select>
+</div>
                     </div>
                   )}
                 </div>

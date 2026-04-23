@@ -41,25 +41,37 @@ export default function Tool() {
     setShowModal(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const fd = new FormData();
-      Object.keys(form).forEach(k => {
-        if (form[k] !== null) fd.append(k, form[k]);
-      });
+const [loading, setLoading] = useState(false);
 
-      if (isEdit) {
-        await api.post(`/tools/${form.id}?_method=PUT`, fd);
-      } else {
-        await api.post("/tools", fd);
-      }
-      setShowModal(false);
-      loadData();
-    } catch {
-      alert("Gagal menyimpan data 😢");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (loading) return; // 🔥 cegah double klik
+
+  try {
+    setLoading(true);
+
+    const fd = new FormData();
+    Object.keys(form).forEach(k => {
+      if (form[k] !== null) fd.append(k, form[k]);
+    });
+
+    if (isEdit) {
+      await api.post(`/tools/${form.id}?_method=PUT`, fd);
+    } else {
+      await api.post("/tools", fd);
     }
-  };
+
+    setShowModal(false);
+    loadData();
+
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menyimpan data");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDelete = async (id) => {
     if (!confirm("Hapus alat ini?")) return;
@@ -76,19 +88,19 @@ export default function Tool() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full mb-3">
-            <i className="fas fa-boxes-stacked text-[10px] text-slate-500"></i>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Inventory Assets</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full mb-3">
+            <i className="fas fa-boxes-stacked text-[10px] text-slate-500 dark:text-slate-600"></i>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-600">Inventory Assets</span>
           </div>
-          <h2 className="text-4xl font-black text-slate-800 tracking-tighter">Katalog Alat</h2>
-          <p className="text-slate-400 font-medium mt-2">Kelola aset fisik, pantau ketersediaan stok, dan perbarui data inventaris.</p>
+          <h2 className="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">Katalog Buku</h2>
+          <p className="text-slate-400 dark:text-slate-500 font-medium mt-2">Kelola Buku, pantau ketersediaan stok, dan perbarui data inventaris.</p>
         </div>
         <button
           onClick={openAdd}
-          className="bg-slate-900 hover:bg-green-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center gap-3 group w-fit"
+          className="bg-slate-900 dark:bg-slate-900 hover:bg-green-600 dark:hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 dark:shadow-slate-900 transition-all active:scale-95 flex items-center gap-3 group w-fit"
         >
           <i className="fas fa-plus group-hover:rotate-90 transition-transform"></i>
-          Daftarkan Alat Baru
+          Daftarkan Buku Baru
         </button>
       </div>
 
@@ -190,8 +202,8 @@ export default function Tool() {
                <i className="fas fa-toolbox text-sm"></i>
             </div>
             <div>
-               <h3 className="text-lg font-black tracking-tight">{isEdit ? "Edit Data Alat" : "Registrasi Alat Pinjam"}</h3>
-               <p className="text-[9px] font-bold text-green-500 uppercase tracking-[0.2em]">Peminjaman System v1.0</p>
+               <h3 className="text-lg font-black tracking-tight">{isEdit ? "Edit Data Alat" : "Tambah Buku"}</h3>
+               <p className="text-[9px] font-bold text-green-500 uppercase tracking-[0.2em]">Peminjaman System</p>
             </div>
          </div>
          <button onClick={() => setShowModal(false)} className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-rose-500 rounded-xl transition-all relative z-10">
@@ -205,8 +217,8 @@ export default function Tool() {
           {/* KOLOM KIRI: Identitas Alat */}
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Perangkat</label>
-              <input placeholder="Nama alat yang akan dipinjamkan..." value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-5 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-green-500 outline-none transition-all" required />
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Buku</label>
+              <input placeholder="Nama Buku yang akan dipinjamkan..." value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-5 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-green-500 outline-none transition-all" required />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -225,7 +237,7 @@ export default function Tool() {
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ketentuan / Deskripsi</label>
-              <textarea rows="4" placeholder="Tuliskan kondisi alat atau kelengkapan..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-5 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-green-500 outline-none resize-none" required />
+              <textarea rows="4" placeholder="Tuliskan deskripsi singkat buku..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="w-full bg-slate-50 border-none rounded-xl px-5 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-green-500 outline-none resize-none" required />
             </div>
           </div>
 
@@ -244,7 +256,7 @@ export default function Tool() {
                       <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-300 mx-auto mb-3">
                          <i className="fas fa-camera text-lg"></i>
                       </div>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Upload Foto Alat</p>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Upload Foto Buku</p>
                     </div>
                   )}
                   <input type="file" className="hidden" accept="image/*" onChange={e => setForm({ ...form, image: e.target.files[0] })} />
@@ -257,11 +269,32 @@ export default function Tool() {
 
         {/* Action Buttons Lebih Ramping */}
         <div className="mt-6 pt-5 border-t border-slate-50 flex gap-3 justify-end items-center">
-          <button type="button" onClick={() => setShowModal(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors px-4">Batal</button>
-          <button type="submit" className="bg-green-600 text-white px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-100 hover:bg-green-700 transition-all">
-            {isEdit ? "Update Data" : "Konfirmasi Simpan"}
-          </button>
-        </div>
+
+  <button
+    type="button"
+    onClick={() => !loading && setShowModal(false)}
+    disabled={loading}
+    className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Batal
+  </button>
+
+  <button
+    type="submit"
+    disabled={loading}
+    className="bg-green-600 text-white px-10 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-green-100 hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+  >
+    {loading ? (
+      <>
+        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        Memproses...
+      </>
+    ) : (
+      isEdit ? "Update Data" : "Konfirmasi Simpan"
+    )}
+  </button>
+
+</div>
       </form>
     </div>
   </div>

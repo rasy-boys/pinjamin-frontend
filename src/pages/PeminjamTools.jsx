@@ -60,7 +60,7 @@ useEffect(() => {
           </span>
           <input
             type="text"
-            placeholder="Cari alat praktikum..."
+            placeholder="Cari buku..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-4xl shadow-sm focus:ring-2 focus:ring-green-500 outline-none transition-all text-sm font-medium"
@@ -87,7 +87,7 @@ useEffect(() => {
       ) : filteredTools.length === 0 ? (
         <div className="py-20 text-center bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
           <i className="fas fa-box-open text-4xl text-gray-300 mb-4"></i>
-          <p className="text-gray-500 font-bold">Alat tidak ditemukan</p>
+          <p className="text-gray-500 font-bold">Buku tidak ditemukan</p>
         </div>
       ) : (
         /* GRID ALAT */
@@ -95,7 +95,7 @@ useEffect(() => {
           {filteredTools.map((tool) => (
             <div
               key={tool.id}
-              className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-green-900/5 transition-all duration-500 flex flex-col overflow-hidden"
+              className="group bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-2xl hover:shadow-green-900/5 dark:hover:shadow-green-900/20 transition-all duration-500 flex flex-col overflow-hidden"
             >
               {/* IMAGE WRAPPER */}
               <div className="relative h-56 overflow-hidden">
@@ -152,7 +152,7 @@ useEffect(() => {
                   {tool.stock > 0 ? (
                     <>
                       <i className="fas fa-plus-circle text-sm"></i>
-                      Pinjam Alat
+                      Pinjam Buku
                     </>
                   ) : (
                     "Stok Kosong"
@@ -172,7 +172,7 @@ useEffect(() => {
         <div>
           <h4 className="font-black text-lg mb-1">Tips Peminjaman</h4>
           <p className="text-slate-400 text-sm font-medium">
-            Gunakan alat sesuai prosedur laboratorium. Kerusakan yang disebabkan kelalaian akan dikenakan sanksi sesuai aturan yang berlaku.
+            Gunakan buku sesuai prosedur perpustakaan. Kerusakan yang disebabkan kelalaian akan dikenakan sanksi sesuai aturan yang berlaku.
           </p>
         </div>
       </div>

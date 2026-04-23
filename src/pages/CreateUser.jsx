@@ -74,7 +74,7 @@ export default function CreateUser() {
             <i className="fas fa-users-gear text-[10px] text-slate-500"></i>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Access Management</span>
           </div>
-          <h2 className="text-4xl font-black text-slate-800 tracking-tighter">Otoritas Pengguna</h2>
+          <h2 className="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">Otoritas Pengguna</h2>
           <p className="text-slate-400 font-medium mt-2">Atur hak akses akun petugas dan kelola database identitas siswa secara terpusat.</p>
         </div>
         <button
@@ -92,7 +92,7 @@ export default function CreateUser() {
           <div className="flex items-center justify-between mb-6 px-2">
             <div className="flex items-center gap-3">
               <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight">Tim Manajemen & Petugas</h3>
+              <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Tim Manajemen & Petugas</h3>
             </div>
             <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-blue-100">
               {petugas.length} Akun Aktif
@@ -150,7 +150,7 @@ export default function CreateUser() {
         <div className="flex items-center justify-between mb-8 px-2">
           <div className="flex items-center gap-3">
             <div className="w-2 h-8 bg-green-500 rounded-full"></div>
-            <h3 className="text-xl font-black text-slate-800 tracking-tight">Database Siswa / Peminjam</h3>
+            <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Database Siswa / Peminjam</h3>
           </div>
           <span className="bg-green-50 text-green-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-green-100">
             {siswa.length} Terdaftar

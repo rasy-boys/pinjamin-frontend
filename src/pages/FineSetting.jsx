@@ -88,7 +88,7 @@ export default function FineSetting() {
 
 
         {/* ================= TAB ================= */}
-        <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-1 w-fit">
+        <div className="bg-gray-100 dark:bg-slate-700 p-1.5 rounded-2xl flex gap-1 w-fit">
 
           <button
             onClick={() => setTab("setting")}
@@ -120,7 +120,7 @@ export default function FineSetting() {
 
 
       {/* ================= CONTAINER ================= */}
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden min-h-[350px]">
+      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-sm dark:shadow-slate-900/50 border border-gray-100 dark:border-slate-700 overflow-hidden min-h-[350px]">
 
         <div className="p-10">
 

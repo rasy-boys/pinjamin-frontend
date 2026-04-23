@@ -61,7 +61,7 @@ export default function ActivityLog() {
       {/* HEADER */}
       <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight">Log Aktivitas</h2>
+          <h2 className="text-3xl font-extrabold text-gray-800 dark:text-white tracking-tight">Log Aktivitas</h2>
           <p className="text-gray-500 mt-1">Jejak audit sistem: {filteredLogs.length} aktivitas ditemukan.</p>
         </div>
         
@@ -75,7 +75,7 @@ export default function ActivityLog() {
       </div>
 
       {/* MODERN TABLE CONTAINER */}
-      <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 shadow-sm dark:shadow-slate-900/50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -116,7 +116,7 @@ export default function ActivityLog() {
                           {l.user?.name?.charAt(0) || "?"}
                         </div>
                         <div>
-                           <p className="text-sm font-semibold text-gray-800 leading-none">{l.user?.name || "System"}</p>
+                           <p className="text-sm font-semibold text-gray-800 dark:text-white leading-none">{l.user?.name || "System"}</p>
                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">{l.user?.role || "System"}</p>
                         </div>
                       </div>

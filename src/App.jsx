@@ -22,6 +22,8 @@ import PeminjamPengembalian from "./pages/PeminjamPengembalian";
 import PetugasLaporan from "./pages/PetugasLaporan";
 import FineSetting from "./pages/FineSetting";
 import { useEffect } from "react";
+import PetugasProfil from "./pages/PetugasProfil";
+import Register from "./pages/Register";
 
 function App() {
    useEffect(() => {
@@ -49,6 +51,8 @@ function App() {
   }
 />
 
+<Route path="/register" element={<Register />} />
+
    <Route
   path="/admin"
   element={
@@ -56,6 +60,15 @@ function App() {
       <Admin />
     </ProtectedRoute>
   }
+/>
+
+<Route 
+  path="/profil-petugas" 
+  element={
+    <ProtectedRoute roles={["petugas"]}>
+      <PetugasProfil />
+    </ProtectedRoute>
+  } 
 />
         <Route 
         path="/petugas" 

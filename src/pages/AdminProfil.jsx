@@ -1,4 +1,5 @@
 import { useState } from "react";
+import api from "../api/axios";
 import DashboardLayout from "../components/DashboardLayout";
 
 export default function AdminProfil() {
@@ -64,7 +65,7 @@ export default function AdminProfil() {
           
           {/* KOLOM KIRI: FORM DATA UTAMA */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 md:p-10 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 p-8 md:p-10 shadow-sm dark:shadow-slate-900/50">
               <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">Personal Information</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -105,7 +106,7 @@ export default function AdminProfil() {
           {/* KOLOM KANAN: SYSTEM STATUS */}
           <div className="space-y-6">
             {/* Card Keamanan */}
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 p-8 shadow-sm dark:shadow-slate-900/50">
               <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Keamanan</h4>
               <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all">
                 Ganti Password

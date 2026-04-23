@@ -49,24 +49,24 @@ export default function Category() {
     <DashboardLayout role={role}>
       {/* --- HEADER --- */}
       <div className="mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full mb-3 border border-green-100">
-          <i className="fas fa-tags text-[10px] text-green-600"></i>
-          <span className="text-[10px] font-black uppercase tracking-widest text-green-600">Inventory System</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-full mb-3 border border-green-100 dark:border-green-800">
+          <i className="fas fa-tags text-[10px] text-green-600 dark:text-green-500"></i>
+          <span className="text-[10px] font-black uppercase tracking-widest text-green-600 dark:text-green-500">Kategori Buku</span>
         </div>
-        <h2 className="text-4xl font-black text-slate-800 tracking-tighter">Kategori Alat</h2>
-        <p className="text-slate-400 font-medium mt-2">Kelompokkan inventaris untuk manajemen yang lebih terstruktur.</p>
+        <h2 className="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">Kategori Buku</h2>
+        <p className="text-slate-400 dark:text-slate-500 font-medium mt-2">Kelompokkan inventaris untuk manajemen yang lebih terstruktur.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         
         {/* --- FORM SECTION (STICKY) --- */}
         <div className="lg:col-span-4 lg:sticky lg:top-24">
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-100/50">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-100/50 dark:shadow-slate-900/50">
             <div className="flex items-center gap-3 mb-8">
-               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg ${editId ? 'bg-amber-500 shadow-amber-100' : 'bg-slate-900 shadow-slate-100'}`}>
+               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg ${editId ? 'bg-amber-500 dark:bg-amber-600 shadow-amber-100 dark:shadow-amber-900' : 'bg-slate-900 dark:bg-slate-900 shadow-slate-100 dark:shadow-slate-900'}`}>
                   <i className={`fas ${editId ? 'fa-pen-to-square' : 'fa-plus'}`}></i>
                </div>
-               <h3 className="text-lg font-black text-slate-800 tracking-tight">
+               <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
                 {editId ? "Update Kategori" : "Kategori Baru"}
                </h3>
             </div>
@@ -141,7 +141,7 @@ export default function Category() {
                        <span className="font-black text-slate-700 group-hover:text-slate-900 transition-colors uppercase tracking-tight">
                         {c.name}
                        </span>
-                       <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-0.5 group-hover:text-green-600 transition-colors">Kategori Alat</p>
+                       <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-0.5 group-hover:text-green-600 transition-colors">Kategori Buku</p>
                     </div>
                   </div>
 

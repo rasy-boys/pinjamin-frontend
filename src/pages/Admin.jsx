@@ -79,7 +79,7 @@ export default function Admin() {
 
       {/* ================= LOADING ================= */}
       {loading && (
-        <div className="py-40 text-center text-gray-400 font-black tracking-widest uppercase text-xs">
+        <div className="py-40 text-center text-gray-400 dark:text-slate-500 font-black tracking-widest uppercase text-xs">
           Memuat Dashboard...
         </div>
       )}
@@ -90,7 +90,7 @@ export default function Admin() {
 
 
           {/* ================= HERO ================= */}
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 md:p-12 text-white shadow-2xl">
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 dark:bg-slate-950 p-8 md:p-12 text-white shadow-2xl dark:shadow-slate-900/50">
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-8">
 
@@ -108,7 +108,7 @@ export default function Admin() {
                   <span className="text-green-500 italic">Admin</span>
                 </h2>
 
-                <p className="mt-4 text-slate-400 text-sm font-medium max-w-sm">
+                <p className="mt-4 text-slate-400 dark:text-slate-500 text-sm font-medium max-w-sm">
                   Sistem berjalan normal. Pantau semua aktivitas laboratorium di sini.
                 </p>
 
@@ -128,7 +128,7 @@ export default function Admin() {
 
               <div
                 key={i}
-                className="p-6 bg-white border border-gray-100 rounded-[2rem] hover:shadow-xl transition-all"
+                className="p-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-[2rem] hover:shadow-xl dark:hover:shadow-slate-900/50 transition-all"
               >
 
                 <div
@@ -137,11 +137,11 @@ export default function Admin() {
                   <i className={`fas ${stat.icon}`}></i>
                 </div>
 
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                <p className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-[0.2em]">
                   {stat.label}
                 </p>
 
-                <h3 className="text-3xl font-black text-slate-800 mt-2">
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white mt-2">
                   {stat.value}
                 </h3>
 
@@ -153,15 +153,15 @@ export default function Admin() {
 
 
           {/* ================= ACTIVITY ================= */}
-          <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8">
+          <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 p-8">
 
             <div className="flex justify-between items-center mb-8">
 
               <div>
-                <h3 className="font-black text-slate-800 text-xl">
+                <h3 className="font-black text-slate-800 dark:text-white text-xl">
                   Aktivitas Terkini
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                   Log sistem terbaru
                 </p>
               </div>
@@ -173,7 +173,7 @@ export default function Admin() {
             <div className="space-y-6">
 
               {logs.length === 0 && (
-                <p className="text-center text-gray-400 italic py-10">
+                <p className="text-center text-gray-400 dark:text-slate-500 italic py-10">
                   Belum ada aktivitas.
                 </p>
               )}
@@ -186,18 +186,18 @@ export default function Admin() {
                   className="flex items-center gap-5 group"
                 >
 
-                  <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500">
                     <i className="fas fa-history text-sm"></i>
                   </div>
 
 
                   <div className="flex-1">
 
-                    <p className="text-sm font-black text-slate-800">
+                    <p className="text-sm font-black text-slate-800 dark:text-slate-100">
                       {log.description}
                     </p>
 
-                    <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-1 uppercase">
 
                       {log.user?.name || "System"} •{" "}
                       {new Date(log.created_at).toLocaleString("id-ID")}
@@ -209,7 +209,7 @@ export default function Admin() {
 
                   <div>
 
-                    <span className="text-[9px] bg-green-50 text-green-600 px-3 py-1.5 rounded-lg font-black uppercase border border-green-100">
+                    <span className="text-[9px] bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-400 px-3 py-1.5 rounded-lg font-black uppercase border border-green-100 dark:border-green-800">
                       {log.action}
                     </span>
 

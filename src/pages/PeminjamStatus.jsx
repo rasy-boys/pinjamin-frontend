@@ -123,7 +123,7 @@ export default function PeminjamStatus() {
           <p className="text-slate-400 font-bold">Kamu belum pernah meminjam alat apapun.</p>
         </div>
       ) : (
-        <div className="overflow-hidden bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
+        <div className="overflow-hidden bg-white dark:bg-slate-800 rounded-[2.5rem] border border-gray-100 dark:border-slate-700 shadow-sm dark:shadow-slate-900/50">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -161,9 +161,7 @@ export default function PeminjamStatus() {
                             <span className="text-xs font-bold text-slate-600">
                               {l.type === "day" ? l.end_date : `${l.start_time} - ${l.end_time}`}
                             </span>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${getRemainingClass(l)}`}>
-                              ⏳ {getRemainingTime(l)}
-                            </span>
+                            
                           </>
                         )}
                       </div>

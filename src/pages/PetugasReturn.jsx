@@ -6,6 +6,7 @@ export default function PetugasReturn() {
 
   const role = localStorage.getItem("role");
 
+  const [search, setSearch] = useState("");
   const [requests, setRequests] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -229,6 +230,36 @@ const getRemainingTime = (loan) => {
 
 
 
+  /* ================= FILTERED DATA ================= */
+  const getFilteredData = () => {
+    const currentData = tab === "request" ? requests : tab === "reminder" ? activeLoans : history;
+    if (!search) return currentData;
+    return currentData.filter(item => 
+      item.user?.name?.toLowerCase().includes(search.toLowerCase())
+    );
+  };
+
+  /* ================= STATUS TEPAT/TERLAMBAT ================= */
+  const getStatusBadge = (loan) => {
+    const now = new Date();
+    let limit;
+
+    if (loan.type === "day") {
+      limit = new Date(loan.end_date);
+      limit.setHours(23, 59, 59);
+    } else {
+      limit = new Date(`${loan.start_date} ${loan.end_time}`);
+    }
+
+    const isLate = now > limit;
+
+    return {
+      text: isLate ? "Terlambat" : "Tepat",
+      color: isLate ? "text-red-600 bg-red-50 border-red-100" : "text-green-600 bg-green-50 border-green-100",
+      bgClass: isLate ? "bg-red-50" : "bg-green-50"
+    };
+  };
+
   /* ================= UI ================= */
   return (
     <DashboardLayout role={role}>
@@ -295,17 +326,31 @@ const getRemainingTime = (loan) => {
 
         <div className="overflow-x-auto p-6">
 
+<div className="mb-6 flex justify-between items-center">
+  <input
+    type="text"
+    placeholder="Cari nama siswa..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="px-5 py-3 rounded-2xl border bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm w-72"
+  />
+</div>
+
          <table className="w-full border-separate border-spacing-y-4">
   {/* HEAD */}
   <thead>
     <tr className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
       <th className="px-4 py-2 text-center w-16">No</th>
       <th className="px-4 py-2 text-left">Siswa</th>
-      <th className="px-4 py-2 text-left">Alat</th>
       
       {/* Judul Kolom Dinamis */}
       {tab === "reminder" ? (
         <th className="px-4 py-2 text-center">Sisa Waktu</th>
+      ) : tab === "request" ? (
+        <>
+          <th className="px-4 py-2 text-center">Tanggal Pengajuan</th>
+          <th className="px-4 py-2 text-center">Status</th>
+        </>
       ) : (
         <>
           <th className="px-4 py-2 text-left">Pinjam</th>
@@ -325,22 +370,23 @@ const getRemainingTime = (loan) => {
   <tbody>
     {loading ? (
       <tr>
-        <td colSpan={7} className="py-20 text-center">
+        <td colSpan={tab === "reminder" ? 3 : tab === "request" ? 4 : 5} className="py-20 text-center">
           <i className="fas fa-spinner animate-spin text-3xl text-blue-500"></i>
         </td>
       </tr>
-    ) : (tab === "request" ? requests : tab === "reminder" ? activeLoans : history).length === 0 ? (
+    ) : getFilteredData().length === 0 ? (
       <tr>
-        <td colSpan={7} className="py-20 text-center text-gray-400 font-bold italic">
+        <td colSpan={tab === "reminder" ? 3 : tab === "request" ? 4 : 5} className="py-20 text-center text-gray-400 font-bold italic">
           Data tidak ditemukan.
         </td>
       </tr>
     ) : (
-      (tab === "request" ? requests : tab === "reminder" ? activeLoans : history).map((l, i) => {
+      getFilteredData().map((l, i) => {
         
         // Ambil info denda untuk history atau info waktu untuk reminder
         const info = tab === "history" ? getPreviewFine(l) : null;
         const timeInfo = tab === "reminder" ? getRemainingTime(l) : null;
+        const statusBadge = tab === "request" ? getStatusBadge(l) : null;
 
         return (
           <tr key={l.id} className="group">
@@ -355,10 +401,6 @@ const getRemainingTime = (loan) => {
               )}
             </td>
 
-            <td className="bg-gray-50/50 px-4 py-5 font-black text-gray-800">
-              {l.tool?.name}
-            </td>
-
             {/* Kolom Waktu Dinamis */}
             {tab === "reminder" ? (
               <td className="bg-gray-50/50 px-4 py-5 text-center">
@@ -366,6 +408,41 @@ const getRemainingTime = (loan) => {
                   {timeInfo.text}
                 </span>
               </td>
+            ) : tab === "request" ? (
+              <>
+                <td className="bg-gray-50/50 px-4 py-5 text-center">
+  <div className="flex flex-col gap-1">
+    
+    {/* TANGGAL PENGAJUAN RETURN */}
+    <span className="text-xs font-bold text-gray-700">
+      {l.return_request_at
+        ? new Date(l.return_request_at).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : "-"}
+    </span>
+
+    {/* JAM PENGAJUAN RETURN */}
+    <span className="text-[10px] font-bold text-gray-500 bg-white px-2 py-0.5 rounded-lg">
+      {l.return_request_at
+        ? new Date(l.return_request_at).toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })
+        : "-"}
+    </span>
+
+  </div>
+</td>
+                <td className="bg-gray-50/50 px-4 py-5 text-center">
+                  <span className={`text-xs font-black px-3 py-1.5 rounded-xl border ${statusBadge.color}`}>
+                    {statusBadge.text}
+                  </span>
+                </td>
+              </>
             ) : (
               <>
                 <td className="bg-gray-50/50 px-4 py-5">
@@ -453,69 +530,144 @@ const getRemainingTime = (loan) => {
 
         return (
 
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+  <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-zoom-in">
 
-            <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-xl">
+    {/* HEADER */}
+    <div className="bg-blue-600 p-8 text-white flex justify-between items-center">
+      <div>
+        <h3 className="text-2xl font-black">Konfirmasi Pengembalian</h3>
+        <p className="text-blue-100 text-sm">Validasi peminjaman</p>
+      </div>
 
+      <div className="bg-white/20 p-4 rounded-2xl">
+        <i className="fas fa-rotate-left text-2xl"></i>
+      </div>
+    </div>
 
-              <h3 className="text-xl font-black mb-4">
-                Konfirmasi Pengembalian
-              </h3>
+    {/* CONTENT */}
+   <div className="p-8">
 
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              <div className="space-y-2 text-sm mb-6">
+    {/* LEFT */}
+    <div className="space-y-6">
 
-                <p><b>Siswa:</b> {selectedLoan.user?.name}</p>
-                <p><b>Alat:</b> {selectedLoan.tool?.name}</p>
-                <p><b>Jumlah:</b> {selectedLoan.qty}</p>
-                <p><b>Batas:</b> {getLimit(selectedLoan)}</p>
+      {/* SISWA */}
+      <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+        <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+          <i className="fas fa-user"></i>
+        </div>
+        <div>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Siswa</p>
+          <p className="font-black text-gray-800">{selectedLoan.user?.name}</p>
+        </div>
+      </div>
 
-                <p className={`font-black ${
-                  info.late
-                    ? "text-red-500"
-                    : "text-green-600"
-                }`}>
-                  Status: {info.text}
-                </p>
+      {/* ALAT */}
+      <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+        <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden">
+          <img
+            src={
+              selectedLoan.tool?.image
+                ? selectedLoan.tool.image.startsWith("http")
+                  ? selectedLoan.tool.image
+                  : `http://localhost:8000/storage/${selectedLoan.tool.image}`
+                : "https://via.placeholder.com/60"
+            }
+            className="w-full h-full object-cover"
+          />
+        </div>
 
-                <p className="font-black">
-                  Denda: Rp {info.fine.toLocaleString()}
-                </p>
+        <div className="flex-1">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Alat</p>
+          <p className="font-black text-gray-800">{selectedLoan.tool?.name}</p>
+          <p className="text-xs text-gray-500">Jumlah: {selectedLoan.qty}</p>
+        </div>
+      </div>
 
-              </div>
+        {/* STATUS */}
+      <div className={`p-4 rounded-2xl border text-center ${
+        info.late ? "bg-red-50 border-red-100" : "bg-green-50 border-green-100"
+      }`}>
+        <p className="text-[10px] font-bold uppercase text-gray-400 mb-1">
+          Status
+        </p>
+        <p className={`font-black text-sm ${
+          info.late ? "text-red-600" : "text-green-600"
+        }`}>
+          {info.text}
+        </p>
+      </div>
 
+    </div>
 
+    {/* RIGHT */}
+    <div className="space-y-6">
 
-              <div className="flex justify-end gap-3">
+{/* DIPINJAM PADA */}
+<div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+  <p className="text-[10px] text-gray-400 font-bold uppercase">
+    Dipinjam Pada
+  </p>
 
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setSelectedLoan(null);
-                  }}
-                  className="px-4 py-2 bg-gray-100 rounded-xl font-bold"
-                >
-                  Batal
-                </button>
+  <p className="font-black text-gray-800">
+    {selectedLoan.type === "hour"
+      ? `${selectedLoan.start_date} • ${selectedLoan.start_time}`
+      : selectedLoan.start_date}
+  </p>
+</div>
+      {/* BATAS */}
+      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+        <p className="text-[10px] text-gray-400 font-bold uppercase">Batas</p>
+        <p className="font-black text-gray-800">{getLimit(selectedLoan)}</p>
+      </div>
 
+    
 
-                <button
-                  onClick={async () => {
+      {/* DENDA */}
+      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex justify-between items-center">
+        <span className="text-[10px] font-bold text-gray-400 uppercase">
+          Denda
+        </span>
+        <span className={`text-lg font-black ${
+          info.fine > 0 ? "text-red-500" : "text-green-600"
+        }`}>
+          Rp {info.fine.toLocaleString()}
+        </span>
+      </div>
 
-                    await confirmReturn(selectedLoan.id);
+    </div>
 
-                    setShowModal(false);
-                    setSelectedLoan(null);
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-xl font-black"
-                >
-                  Konfirmasi
-                </button>
+  </div>
 
-              </div>
+  {/* BUTTON */}
+  <div className="flex gap-3 mt-8">
+    <button
+      onClick={() => {
+        setShowModal(false);
+        setSelectedLoan(null);
+      }}
+      className="flex-1 py-3 bg-gray-100 rounded-xl font-black text-xs uppercase tracking-widest"
+    >
+      Batal
+    </button>
 
-            </div>
-          </div>
+    <button
+      onClick={async () => {
+        await confirmReturn(selectedLoan.id);
+        setShowModal(false);
+        setSelectedLoan(null);
+      }}
+      className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all active:scale-95"
+    >
+      Konfirmasi
+    </button>
+  </div>
+
+</div>
+  </div>
+</div>
         );
       })()}
 

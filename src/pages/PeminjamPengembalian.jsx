@@ -289,11 +289,11 @@ if (diff <= 0)
           </div>
 
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
-            Pengembalian <span className="text-emerald-500">Alat</span>
+            Pengembalian <span className="text-emerald-500">Buku</span>
           </h2>
 
           <p className="text-slate-400 text-sm font-medium max-w-md">
-            Pantau durasi peminjaman dan kelola pengembalian alat secara mandiri.
+            Pantau durasi peminjaman dan kelola pengembalian buku secara mandiri.
           </p>
 
         </div>
@@ -442,7 +442,7 @@ if (diff <= 0)
 
                         <div>
 
-                          <p className="font-black text-slate-800 text-base mb-1">
+                          <p className="font-black text-slate-800 dark:text-white text-base mb-1">
                             {l.tool?.name}
                           </p>
 

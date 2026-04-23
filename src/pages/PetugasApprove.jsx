@@ -13,6 +13,7 @@ export default function PetugasApprove() {
   const [tools, setTools] = useState([]);
   const [showAlatDetail, setShowAlatDetail] = useState(false);
   const [selectedAlat, setSelectedAlat] = useState(null);
+  const [search, setSearch] = useState("");
 
   const load = async () => {
     try {
@@ -66,6 +67,15 @@ export default function PetugasApprove() {
       pending: { label: "Menunggu", color: "bg-amber-100 text-amber-700 border-amber-200" }
     };
     return map[s] || { label: s, color: "bg-gray-100 text-gray-700 border-gray-200" };
+  };
+
+  // Filter data berdasarkan pencarian nama
+  const getFilteredData = () => {
+    const data = tab === "pending" ? pending : history;
+    if (!search) return data;
+    return data.filter(item => 
+      item.user?.name?.toLowerCase().includes(search.toLowerCase())
+    );
   };
 
   // Logika summary alat per barang
@@ -138,7 +148,7 @@ export default function PetugasApprove() {
     return (
       <div 
         key={tool.id} 
-        className="group relative bg-white rounded-[2.5rem] p-7 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-green-100/50 hover:-translate-y-2 transition-all duration-500 overflow-hidden"
+        className="group relative bg-white dark:bg-slate-800 rounded-[2.5rem] p-7 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-2xl hover:shadow-green-100/50 dark:hover:shadow-slate-900 hover:-translate-y-2 transition-all duration-500 overflow-hidden"
       >
         {/* Dekorasi Latar Belakang */}
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-green-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -209,7 +219,27 @@ export default function PetugasApprove() {
 </div>
         ) : (
           /* TAMPILAN TAB TABEL (PENDING / HISTORY) */
-          <div className="overflow-x-auto p-4">
+          <div className="p-6">
+            {/* Search Input */}
+            <div className="mb-6 flex gap-3">
+              <input
+                type="text"
+                placeholder="Cari nama peminjam..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="px-5 py-3 rounded-2xl border bg-gray-50 outline-none focus:ring-2 focus:ring-green-500 text-sm flex-1 max-w-xs"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-2xl text-sm font-bold transition-all"
+                >
+                  <i className="fas fa-times mr-2"></i>Hapus Filter
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-y-3">
               <thead>
                 <tr className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
@@ -222,14 +252,14 @@ export default function PetugasApprove() {
                 </tr>
               </thead>
               <tbody>
-                {(tab === "pending" ? pending : history).length === 0 && (
+                {getFilteredData().length === 0 && (
                   <tr>
                     <td colSpan={6} className="text-center py-20 text-gray-400 font-medium italic">
-                      Belum ada catatan peminjaman.
+                      {search ? "Tidak ada hasil pencarian." : "Belum ada catatan peminjaman."}
                     </td>
                   </tr>
                 )}
-                {(tab === "pending" ? pending : history).map((l) => (
+                {getFilteredData().map((l) => (
                   <tr key={l.id} className="bg-gray-50/50 hover:bg-green-50 transition-colors group">
                     <td className="px-6 py-4 rounded-l-2xl border-y border-l border-transparent group-hover:border-green-100">
                       <div className="flex items-center gap-3">
@@ -263,7 +293,7 @@ export default function PetugasApprove() {
                     )}
                     <td className="px-6 py-4 text-right rounded-r-2xl border-y border-r border-transparent group-hover:border-green-100">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => openDetail(l)} className="w-9 h-9 flex items-center justify-center bg-white rounded-xl border border-gray-100 text-blue-500 hover:bg-blue-50 transition-all shadow-sm">
+                        <button onClick={() => openDetail(l)} className="w-9 h-9 flex items-center justify-center bg-white dark:bg-slate-700 rounded-xl border border-gray-100 dark:border-slate-600 text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all shadow-sm dark:shadow-slate-900">
                           <i className="fas fa-eye"></i>
                         </button>
                         {tab === "pending" && (
@@ -282,6 +312,7 @@ export default function PetugasApprove() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
@@ -289,39 +320,114 @@ export default function PetugasApprove() {
       {/* MODAL DETAIL PEMINJAMAN */}
       {showDetail && selected && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
-          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-zoom-in">
-            <div className="bg-green-600 p-8 text-white flex justify-between items-center">
-              <div>
-                <h3 className="text-2xl font-black text-white">Informasi Detail</h3>
-                <p className="text-green-100 text-sm font-medium">ID Peminjaman: #{selected.id}</p>
-              </div>
-              <div className="bg-white/20 p-4 rounded-2xl">
-                 <i className="fas fa-file-invoice text-2xl"></i>
-              </div>
-            </div>
-            
-            <div className="p-8">
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Nama Peminjam</label>
-                  <p className="font-black text-gray-800">{selected.user?.name}</p>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Status</label>
-                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${getStatusInfo(selected.status).color}`}>
-                    {getStatusInfo(selected.status).label}
-                  </span>
-                </div>
-                <div className="col-span-2 p-4 bg-gray-50 rounded-2xl border border-gray-100 italic text-sm text-gray-600">
-                  "{selected.reason}"
-                </div>
-              </div>
-              <button onClick={() => setShowDetail(false)} className="w-full bg-gray-900 hover:bg-black py-4 rounded-2xl font-black text-white uppercase tracking-widest text-xs transition-all">
-                Tutup
-              </button>
-            </div>
+  <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-zoom-in">
+    
+    {/* HEADER */}
+    <div className="bg-green-600 p-8 text-white flex justify-between items-center">
+      <div>
+        <h3 className="text-2xl font-black text-white">Informasi Detail</h3>
+        <p className="text-green-100 text-sm font-medium">
+          ID Peminjaman: #{selected.id}
+        </p>
+      </div>
+      <div className="bg-white/20 p-4 rounded-2xl">
+        <i className="fas fa-file-invoice text-2xl"></i>
+      </div>
+    </div>
+
+    {/* CONTENT */}
+    <div className="p-8">
+
+      {/* INFO */}
+      <div className="grid grid-cols-2 gap-6 mb-8">
+        <div>
+          <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+            Nama Peminjam
+          </label>
+          <p className="font-black text-gray-800">
+            {selected.user?.name}
+          </p>
+        </div>
+
+        <div>
+          <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+            Status
+          </label>
+          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${getStatusInfo(selected.status).color}`}>
+            {getStatusInfo(selected.status).label}
+          </span>
+        </div>
+
+        <div className="col-span-2 p-4 bg-gray-50 rounded-2xl border border-gray-100 italic text-sm text-gray-600">
+          "{selected.reason}"
+        </div>
+      </div>
+
+      {/* ===================== */}
+      {/* 📚 BUKU YANG DIPINJAM */}
+      {/* ===================== */}
+      <div className="mb-6">
+        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-3">
+          Buku yang Dipinjam
+        </label>
+
+        <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+
+          {/* GAMBAR */}
+          <div className="w-14 h-14 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0">
+            <img
+              src={
+                selected.tool?.image
+                  ? selected.tool.image.startsWith("http")
+                    ? selected.tool.image
+                    : `http://localhost:8000/storage/${selected.tool.image}`
+                  : "https://via.placeholder.com/60x60?text=Buku"
+              }
+              alt={selected.tool?.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* INFO */}
+          <div className="flex-1">
+            <p className="font-black text-gray-800 text-sm">
+              {selected.tool?.name || "Nama Buku"}
+            </p>
+            <p className="text-xs text-gray-500">
+              Jumlah: {selected.qty}
+            </p>
+          </div>
+
+          {/* QTY */}
+          <div className="text-xs font-bold text-gray-600">
+            x{selected.qty}
           </div>
         </div>
+      </div>
+
+      {/* ===================== */}
+      {/* TOTAL */}
+      {/* ===================== */}
+      <div className="mb-6 pt-4 border-t border-gray-100 flex justify-between items-center">
+        <span className="text-[10px] font-bold text-gray-400 uppercase">
+          Total Buku
+        </span>
+        <span className="text-lg font-black text-gray-800">
+          {selected.qty}
+        </span>
+      </div>
+
+      {/* BUTTON */}
+      <button
+        onClick={() => setShowDetail(false)}
+        className="w-full bg-gray-900 hover:bg-black py-4 rounded-2xl font-black text-white uppercase tracking-widest text-xs transition-all active:scale-95"
+      >
+        Tutup
+      </button>
+
+    </div>
+  </div>
+</div>
       )}
 
       {/* MODAL DETAIL ALAT (SIAPA YANG PINJAM) */}

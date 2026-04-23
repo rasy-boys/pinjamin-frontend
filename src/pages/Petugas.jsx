@@ -74,7 +74,7 @@ export default function Petugas() {
   const stats = [
     { label: "Peminjaman Baru", value: data.pendingCount, icon: "fa-bell", color: "bg-amber-500", shadow: "shadow-amber-100" },
     { label: "Total Peminjam", value: data.totalStudents, icon: "fa-users", color: "bg-green-600", shadow: "shadow-green-100" },
-    { label: "Total Alat", value: data.totalTools, icon: "fa-microscope", color: "bg-blue-500", shadow: "shadow-blue-100" },
+    { label: "Total Buku", value: data.totalTools, icon: "fa-book", color: "bg-blue-500", shadow: "shadow-blue-100" },
     { label: "Aktivitas", value: data.recentActivities.length, icon: "fa-history", color: "bg-purple-500", shadow: "shadow-purple-100" },
   ];
 
@@ -82,22 +82,22 @@ export default function Petugas() {
     <DashboardLayout role={role}>
       {/* Header Section */}
       <div className="mb-8">
-        <h2 className="text-3xl font-black text-gray-800 tracking-tight flex items-center gap-3">
-          <span className="p-3 bg-white rounded-2xl shadow-sm">🧑‍💼</span>
+        <h2 className="text-3xl font-black text-gray-800 dark:text-white tracking-tight flex items-center gap-3">
+          <span className="p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm dark:shadow-slate-900">🧑‍💼</span>
           Dashboard Petugas
         </h2>
-        <p className="text-gray-400 font-medium ml-16 -mt-2">Selamat bekerja, pantau semua aktivitas lab di sini.</p>
+        <p className="text-gray-400 dark:text-slate-500 font-medium ml-16 -mt-2">Selamat bekerja, pantau semua aktivitas di sini.</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((item, index) => (
-          <div key={index} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all group">
+          <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-slate-900 transition-all group">
             <div className="flex justify-between items-start">
               <div className={`${item.color} ${item.shadow} w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg transition-transform group-hover:scale-110`}>
                 <i className={`fas ${item.icon}`}></i>
               </div>
-              <span className="text-3xl font-black text-gray-800">
+              <span className="text-3xl font-black text-gray-800 dark:text-white">
                 {loading ? "..." : item.value}
               </span>
             </div>
