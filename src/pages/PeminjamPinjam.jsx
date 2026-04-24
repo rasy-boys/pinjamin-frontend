@@ -26,6 +26,19 @@ export default function PeminjamPinjam() {
   return `${hh}:${mm}`;
 };
 
+
+const getMaxHours = () => {
+  if (!startTime) return 1;
+
+  const start = new Date(`2000-01-01T${startTime}`);
+  const close = new Date(`2000-01-01T${CLOSE_TIME}`);
+
+  const diffMs = close - start;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  return diffHours > 0 ? diffHours : 0;
+};
+
 const addHours = (time, hoursToAdd) => {
   const date = new Date(`2000-01-01T${time}`);
   date.setHours(date.getHours() + hoursToAdd);
@@ -128,6 +141,15 @@ if (type === "hour") {
 
   if (durationHours > 8) {
     alert("Maksimal peminjaman per jam adalah 8 jam.");
+    return;
+  }
+
+  // ✅ TAMBAHAN WAJIB
+  const close = new Date();
+  close.setHours(15, 0, 0);
+
+  if (end > close) {
+    alert("Jam peminjaman melebihi batas operasional (maks 15:00)");
     return;
   }
 }
@@ -379,33 +401,30 @@ if (type === "day") {
   </label>
 
   <select
-    onChange={(e) => {
-      const hours = parseInt(e.target.value);
+  onChange={(e) => {
+    const hours = parseInt(e.target.value);
 
-      if (!startTime) {
-        alert("Jam mulai belum ada");
-        return;
-      }
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(start);
+    end.setHours(end.getHours() + hours);
 
-      const start = new Date(`2000-01-01T${startTime}`);
-      start.setHours(start.getHours() + hours);
+    const hh = String(end.getHours()).padStart(2, "0");
+    const mm = String(end.getMinutes()).padStart(2, "0");
 
-      const hh = String(start.getHours()).padStart(2, "0");
-      const mm = String(start.getMinutes()).padStart(2, "0");
-
-      setEndTime(`${hh}:${mm}`);
-    }}
-    className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-bold outline-none focus:ring-2 focus:ring-green-500"
-  >
-    <option value="1">1 Jam</option>
-    <option value="2">2 Jam</option>
-    <option value="3">3 Jam</option>
-    <option value="4">4 Jam</option>
-    <option value="5">5 Jam</option>
-    <option value="6">6 Jam</option>
-    <option value="7">7 Jam</option>
-    <option value="8">8 Jam</option>
-  </select>
+    setEndTime(`${hh}:${mm}`);
+  }}
+  className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-bold outline-none focus:ring-2 focus:ring-green-500"
+>
+  {getMaxHours() > 0 ? (
+    [...Array(getMaxHours())].map((_, i) => (
+      <option key={i} value={i + 1}>
+        {i + 1} Jam
+      </option>
+    ))
+  ) : (
+    <option value="">Tidak tersedia</option>
+  )}
+</select>
 </div>
                     </div>
                   )}

@@ -6,11 +6,13 @@ import { useNavigate } from "react-router-dom";
 export default function PeminjamTools() {
   const navigate = useNavigate();
   const [tools, setTools] = useState([]);
+  const categories = ["all", ...new Set(tools.map(t => t.category?.name).filter(Boolean))];
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 const [showFineModal, setShowFineModal] = useState(false);
 const [fines, setFines] = useState([]);
 const [loadingFine, setLoadingFine] = useState(false);
+const [selectedCategory, setSelectedCategory] = useState("all");
 
   const loadTools = async () => {
     try {
@@ -28,9 +30,14 @@ const [loadingFine, setLoadingFine] = useState(false);
   }, []);
 
   // Filter alat berdasarkan search bar
-  const filteredTools = tools.filter((t) =>
-    t.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const filteredTools = tools.filter((t) => {
+  const matchSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchCategory =
+    selectedCategory === "all" ||
+    t.category?.name === selectedCategory;
+
+  return matchSearch && matchCategory;
+});
 
   const fetchFines = async () => {
   try {
@@ -53,30 +60,58 @@ useEffect(() => {
   return (
     <PeminjamLayout>
       {/* SEARCH & FILTER SECTION */}
-      <div className="mb-10 flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-            <i className="fas fa-search"></i>
-          </span>
-          <input
-            type="text"
-            placeholder="Cari buku..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-4xl shadow-sm focus:ring-2 focus:ring-green-500 outline-none transition-all text-sm font-medium"
-          />
-        </div>
-        
-        <div className="flex gap-2">
-  <button
-    onClick={() => setShowFineModal(true)}
-    className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-gray-50 transition-all shadow-sm"
-  >
-    <i className="fas fa-info-circle mr-2"></i> Informasi Denda
-  </button>
-</div>
+    <div className="mb-10 flex flex-col gap-4">
 
-      </div>
+  {/* 🔍 SEARCH */}
+  <div className="w-full">
+    <div className="relative w-full md:max-w-md">
+      <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
+        <i className="fas fa-search"></i>
+      </span>
+      <input
+        type="text"
+        placeholder="Cari buku atau alat..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-3xl shadow-sm focus:ring-2 focus:ring-green-500 outline-none transition-all text-sm font-medium"
+      />
+    </div>
+  </div>
+
+  {/* 🏷 FILTER + ACTION */}
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+    {/* KATEGORI */}
+    <div className="flex flex-wrap gap-2">
+      {categories.map((cat, i) => (
+        <button
+          key={i}
+          onClick={() => setSelectedCategory(cat)}
+          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            selectedCategory === cat
+              ? "bg-green-600 text-white shadow-md"
+              : "bg-white border border-gray-100 text-gray-500 hover:bg-gray-50"
+          }`}
+        >
+          {cat === "all" ? "Semua" : cat}
+        </button>
+      ))}
+    </div>
+
+    {/* BUTTON DENDA */}
+    <div className="flex justify-end">
+      <button
+        onClick={() => setShowFineModal(true)}
+        className="px-5 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
+      >
+        <i className="fas fa-info-circle"></i>
+        Denda
+      </button>
+    </div>
+
+  </div>
+
+</div>
 
       {/* LOADING STATE */}
       {loading ? (

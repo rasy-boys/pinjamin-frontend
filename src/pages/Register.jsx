@@ -9,14 +9,11 @@ export default function Register() {
   const [form, setForm] = useState({
     full_name: "",
     email: "",
-    password: "",
-    confirmPassword: "",
     kelas: "",
     jurusan: "",
     nis: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,20 +22,22 @@ export default function Register() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ✅ STEP 1 VALIDASI EMAIL
   const nextStep = () => {
-    if (!form.email || !form.password) {
-      return setError("Email dan password wajib diisi.");
+    if (!form.email) {
+      return setError("Email wajib diisi.");
     }
-    if (form.password.length < 8) {
-      return setError("Password minimal 8 karakter.");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      return setError("Format email tidak valid.");
     }
-    if (form.password !== form.confirmPassword) {
-      return setError("Konfirmasi password tidak cocok.");
-    }
+
     setError("");
     setStep(2);
   };
 
+  // ✅ SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -49,22 +48,18 @@ export default function Register() {
     try {
       setLoading(true);
 
-      const res = await api.post("/register", {
+      await api.post("/register", {
         name: form.full_name,
         email: form.email,
-        password: form.password,
-        password_confirmation: form.confirmPassword,
         full_name: form.full_name,
         kelas: form.kelas,
         jurusan: form.jurusan,
         nis: form.nis,
       });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("role", res.data.user.role);
+      alert("Akun berhasil dibuat! Cek email kamu untuk password 🔐");
+      navigate("/login");
 
-      navigate("/peminjam");
     } catch (err) {
       setError(err.response?.data?.message || "Gagal register");
     } finally {
@@ -109,54 +104,55 @@ export default function Register() {
             <div className={`h-1 flex-1 rounded-full ${step === 2 ? "bg-green-600" : "bg-gray-200"}`} />
           </div>
 
+          {/* TITLE */}
           <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">
-            {step === 1 ? "Buat Akun" : "Data Siswa"}
+            {step === 1 ? "Daftar dengan Email" : "Data Siswa"}
           </h2>
 
-          {/* ANIMATED FORM */}
-          <div className="relative h-[320px] overflow-hidden">
+          <div className="relative h-[350px] overflow-hidden">
 
-            {/* STEP 1 */}
+            {/* ================= STEP 1 ================= */}
             <div className={`absolute w-full transition-all duration-500 ${
               step === 1 ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
             }`}>
-              <input name="email" placeholder="Email" onChange={handleChange} className="input" />
 
-              <div className="relative mt-4">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password (min 8 karakter)"
-                  onChange={handleChange}
-                  className="input pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-sm text-slate-500"
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
+              <label className="text-xs font-bold text-gray-500 mb-2 block">
+                Email
+              </label>
 
               <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Konfirmasi password"
+                name="email"
+                placeholder="contoh: asya@email.com"
                 onChange={handleChange}
-                className="input mt-4"
+                className="input"
               />
+
+              {/* INFO BOX */}
+              <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-3">
+                <p className="text-xs text-green-700 font-medium">
+                  🔐 Password akan dikirim ke email Anda
+                </p>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Pastikan email yang Anda masukkan benar dan aktif
+                </p>
+              </div>
 
               <button onClick={nextStep} className="btn-primary mt-6">
                 Lanjut
               </button>
             </div>
 
-            {/* STEP 2 */}
+            {/* ================= STEP 2 ================= */}
             <div className={`absolute w-full transition-all duration-500 ${
               step === 2 ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
             }`}>
-              <input name="full_name" placeholder="Nama lengkap" onChange={handleChange} className="input" />
+
+              <input
+                name="full_name"
+                placeholder="Nama lengkap"
+                onChange={handleChange}
+                className="input"
+              />
 
               <select name="kelas" onChange={handleChange} className="input mt-4">
                 <option value="">Pilih kelas</option>
@@ -167,11 +163,19 @@ export default function Register() {
 
               <select name="jurusan" onChange={handleChange} className="input mt-4">
                 <option value="">Pilih jurusan</option>
-                <option value="RPL">RPL</option>
+                <option value="PPLG">PPLG</option>
+                <option value="TPFL">TPFL</option>
                 <option value="TKJ">TKJ</option>
+                <option value="ANIMASI">ANIMASI</option>
+                <option value="BCF">BCF</option>
               </select>
 
-              <input name="nis" placeholder="NIS (opsional)" onChange={handleChange} className="input mt-4" />
+              <input
+                name="nis"
+                placeholder="NIS (opsional)"
+                onChange={handleChange}
+                className="input mt-4"
+              />
 
               <div className="flex gap-2 mt-6">
                 <button onClick={() => setStep(1)} className="btn-secondary">
@@ -184,12 +188,14 @@ export default function Register() {
             </div>
           </div>
 
+          {/* ERROR */}
           {error && (
             <p className="text-red-500 text-sm text-center mt-4">
               {error}
             </p>
           )}
 
+          {/* LOGIN LINK */}
           <p className="text-center text-sm text-slate-500 mt-6">
             Sudah punya akun?{" "}
             <Link to="/login" className="text-green-600 font-bold">
@@ -197,7 +203,7 @@ export default function Register() {
             </Link>
           </p>
 
-          {/* LOADING OVERLAY */}
+          {/* LOADING */}
           {loading && (
             <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
               <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
@@ -206,6 +212,7 @@ export default function Register() {
         </div>
       </div>
 
+      {/* STYLE */}
       <style jsx>{`
         .input {
           width: 100%;

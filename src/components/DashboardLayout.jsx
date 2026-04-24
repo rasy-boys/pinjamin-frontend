@@ -8,7 +8,7 @@ export default function DashboardLayout({ children, role }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-
+const user = JSON.parse(localStorage.getItem("user"));
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = () => {
@@ -76,7 +76,7 @@ export default function DashboardLayout({ children, role }) {
              {role === "admin" && (
                <>
                  <NavLink to="/categories" icon="fa-folder-tree">Kategori</NavLink>
-                 <NavLink to="/tools" icon="fa-toolbox">Data Alat</NavLink>
+                 <NavLink to="/tools" icon="fa-toolbox">Data Buku</NavLink>
                  <NavLink to="/logs" icon="fa-history">Log Aktivitas</NavLink>
                </>
              )}
@@ -127,8 +127,8 @@ export default function DashboardLayout({ children, role }) {
 
               {/* Text Container: Name di atas, Role di bawah */}
               <div className="hidden md:flex flex-col text-left justify-center leading-none">
-                <p className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
-                  {localStorage.getItem("name") || "Guest"}
+               <p className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                  {user?.name || "Guest"}
                 </p>
                 <p className="text-[9px] font-bold text-green-600 dark:text-emerald-500 uppercase tracking-wide mt-1">
                   {role}
